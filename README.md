@@ -1,0 +1,97 @@
+# MedSphere Notification Service
+
+Backend foundation for **MS-14: Notification Service - DB + Socket.IO + Core API**.
+
+## What This Service Owns
+
+- Dedicated PostgreSQL notifications table
+- Internal notification creation API for other MedSphere services
+- Authenticated user notification API
+- Socket.IO real-time delivery
+- Optional Redis Socket.IO adapter for multi-instance broadcasting
+- Optional MongoDB bootstrap for `chat_rooms`, `chat_messages`, and `activity_streams`
+- Optional SMTP email delivery for notifications with the `email` channel
+- Swagger/OpenAPI documentation at `/api-docs`
+
+## Stack
+
+- Node.js + Express + TypeScript
+- Prisma + PostgreSQL
+- Socket.IO
+- Redis adapter for Socket.IO
+- MongoDB driver
+- Nodemailer
+- Jest
+- Zod validation
+
+## Environment
+
+Copy `.env.example` to `.env` and adjust values:
+
+```env
+PORT=3005
+NODE_ENV=development
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/medsphere_notifications?schema=public"
+MONGODB_URL="mongodb://localhost:27017/medsphere_notifications"
+REDIS_URL="redis://localhost:6379"
+JWT_ACCESS_SECRET="replace-with-auth-service-access-secret"
+INTERNAL_API_KEY="replace-with-shared-internal-service-key"
+CORS_ORIGIN="http://localhost:5173"
+SMTP_HOST="smtp.example.com"
+SMTP_PORT=587
+SMTP_USER="smtp-user"
+SMTP_PASS="smtp-password"
+SMTP_FROM="notifications@medsphere.local"
+SWAGGER_ENABLED=true
+```
+
+`MONGODB_URL`, `REDIS_URL`, and SMTP values are optional for local development. When `REDIS_URL` is omitted, Socket.IO still works in single-instance mode.
+
+## Run Locally
+
+```bash
+npm install
+npm run prisma:generate
+npm run prisma:migrate
+npm run dev
+```
+
+Service URLs:
+
+- Health: `GET http://localhost:3005/health`
+- Swagger: `http://localhost:3005/api-docs`
+
+## API Surface
+
+Internal service-to-service endpoint:
+
+- `POST /internal/notifications/send`
+- Header: `x-internal-api-key: <INTERNAL_API_KEY>`
+- Body: `{ userId, type, title, message, link?, channels?, recipientEmail? }`
+
+Authenticated user endpoints:
+
+- `GET /api/notifications?isRead=&page=&limit=`
+- `PUT /api/notifications/:id/read`
+- `PUT /api/notifications/read-all`
+- `DELETE /api/notifications/:id`
+
+Socket.IO clients connect with:
+
+```ts
+io('http://localhost:3005', {
+  auth: { token: accessToken },
+});
+```
+
+Events emitted by the service:
+
+- `notification:new`
+- `notification:read`
+- `notification:all-read`
+
+## Tests
+
+```bash
+npm test
+```
