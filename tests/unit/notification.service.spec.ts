@@ -2,6 +2,7 @@ import { NotificationService } from '../../src/modules/notifications/application
 import { Notification } from '../../src/modules/notifications/domain/notification.entity';
 import { NotificationEmailService } from '../../src/modules/notifications/domain/notification-email.service';
 import { NotificationRepository } from '../../src/modules/notifications/domain/notification.repository';
+import { notificationGateway } from '../../src/socket/notification.gateway';
 
 const notification: Notification = {
     id: 'ef151067-b411-4604-b24e-1906393ce833',
@@ -38,8 +39,13 @@ function createFixture() {
 }
 
 describe('NotificationService', () => {
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
+
     it('creates an in-app notification by default', async () => {
         const { repository, emailService, service } = createFixture();
+        const emitNew = jest.spyOn(notificationGateway, 'emitNew').mockImplementation();
 
         const result = await service.create({
             userId: notification.userId,
@@ -58,10 +64,12 @@ describe('NotificationService', () => {
             channels: ['in_app'],
         });
         expect(emailService.sendNotification).not.toHaveBeenCalled();
+        expect(emitNew).toHaveBeenCalledWith(notification);
     });
 
     it('sends email when the email channel is requested', async () => {
         const { emailService, service } = createFixture();
+        jest.spyOn(notificationGateway, 'emitNew').mockImplementation();
 
         await service.create({
             userId: notification.userId,
@@ -91,7 +99,18 @@ describe('NotificationService', () => {
 
     it('marks all notifications as read and reports the affected count', async () => {
         const { service } = createFixture();
+        const emitAllRead = jest.spyOn(notificationGateway, 'emitAllRead').mockImplementation();
 
         await expect(service.markAllRead(notification.userId)).resolves.toEqual({ count: 3 });
+        expect(emitAllRead).toHaveBeenCalledWith(notification.userId, 3);
+    });
+
+    it('emits when one notification is marked as read', async () => {
+        const { service } = createFixture();
+        const emitRead = jest.spyOn(notificationGateway, 'emitRead').mockImplementation();
+        const result = await service.markRead(notification.id, notification.userId);
+
+        expect(result.isRead).toBe(true);
+        expect(emitRead).toHaveBeenCalledWith(notification.userId, result);
     });
 });
