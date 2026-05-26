@@ -41,7 +41,7 @@ export const swaggerSpec = swaggerJSDoc({
                         createdAt: { type: 'string', format: 'date-time' },
                     },
                 },
-                SendNotificationRequest: {
+                LegacySendNotificationRequest: {
                     type: 'object',
                     required: ['userId', 'type', 'title', 'message'],
                     properties: {
@@ -60,7 +60,107 @@ export const swaggerSpec = swaggerJSDoc({
                             format: 'email',
                             description: 'Optional recipient email for email-channel delivery.',
                         },
+                        dedupeByTypeAndLink: {
+                            type: 'boolean',
+                            description: 'When true, returns an existing notification for the same user, type, and link instead of creating a duplicate.',
+                        },
                     },
+                },
+                TypedNotificationRecipient: {
+                    type: 'object',
+                    required: ['role'],
+                    properties: {
+                        role: {
+                            type: 'string',
+                            enum: [
+                                'patient',
+                                'staff',
+                                'doctor',
+                                'admin',
+                                'department_head',
+                                'user',
+                                'recipient',
+                            ],
+                        },
+                        userId: {
+                            type: 'string',
+                            format: 'uuid',
+                            description: 'Required when the PRD channel includes in-app delivery.',
+                        },
+                        email: {
+                            type: 'string',
+                            format: 'email',
+                            description: 'Required when the PRD channel includes email delivery.',
+                        },
+                        link: {
+                            type: 'string',
+                            nullable: true,
+                            description: 'Optional recipient-specific app route or absolute URL.',
+                        },
+                    },
+                },
+                TypedSendNotificationRequest: {
+                    type: 'object',
+                    required: ['type', 'recipients'],
+                    properties: {
+                        type: {
+                            type: 'string',
+                            enum: [
+                                'appointment.booked',
+                                'appointment.confirmed',
+                                'appointment.reminder.24h',
+                                'appointment.reminder.1h',
+                                'appointment.cancelled',
+                                'appointment.rescheduled',
+                                'appointment.no_show',
+                                'lab.results.completed',
+                                'lab.results.reviewed',
+                                'prescription.created',
+                                'prescription.ready_for_pickup',
+                                'prescription.medication_out_of_stock',
+                                'inventory.low_stock',
+                                'inventory.expiry_warning',
+                                'feedback.created',
+                                'contact.submitted',
+                                'account.verification',
+                                'account.password_reset',
+                                'chat.message.created',
+                                'appointment.ai_booked',
+                            ],
+                        },
+                        recipients: {
+                            type: 'array',
+                            items: { $ref: '#/components/schemas/TypedNotificationRecipient' },
+                        },
+                        data: {
+                            type: 'object',
+                            additionalProperties: true,
+                            description: 'Event data used by the service template, such as appointmentId, scheduledAt, serviceName, or resetUrl.',
+                        },
+                        title: {
+                            type: 'string',
+                            description: 'Optional override for the service-rendered title.',
+                        },
+                        message: {
+                            type: 'string',
+                            description: 'Optional override for the service-rendered message.',
+                        },
+                        link: {
+                            type: 'string',
+                            nullable: true,
+                            description: 'Optional shared app route or absolute URL.',
+                        },
+                        dedupeByTypeAndLink: {
+                            type: 'boolean',
+                            description: 'When true, in-app notifications reuse an existing record for the same user, type, and link.',
+                        },
+                    },
+                },
+                SendNotificationRequest: {
+                    oneOf: [
+                        { $ref: '#/components/schemas/TypedSendNotificationRequest' },
+                        { $ref: '#/components/schemas/LegacySendNotificationRequest' },
+                    ],
                 },
             },
         },

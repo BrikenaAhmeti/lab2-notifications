@@ -23,6 +23,16 @@ export type CreateNotificationInput = {
     link?: string | null;
     channels?: NotificationChannel[];
     recipientEmail?: string;
+    dedupeByTypeAndLink?: boolean;
+};
+
+export type PersistNotificationInput = {
+    userId: string;
+    type: string;
+    title: string;
+    message: string;
+    link: string | null;
+    channels: NotificationChannel[];
 };
 
 export type ListNotificationsInput = {

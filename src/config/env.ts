@@ -17,6 +17,8 @@ const envSchema = z.object({
     SMTP_USER: z.string().optional(),
     SMTP_PASS: z.string().optional(),
     SMTP_FROM: z.string().email().default('notifications@medsphere.local'),
+    CORE_SERVICE_URL: z.string().url().optional(),
+    APPOINTMENT_REMINDER_JOB_ENABLED: z.coerce.boolean().default(true),
     SWAGGER_ENABLED: z.coerce.boolean().default(true),
 });
 
@@ -48,5 +50,8 @@ export const env = {
         pass: values.SMTP_PASS,
         from: values.SMTP_FROM,
     },
+    coreServiceUrl: values.CORE_SERVICE_URL,
+    appointmentReminderJobEnabled:
+        values.APPOINTMENT_REMINDER_JOB_ENABLED && values.NODE_ENV !== 'test',
     swaggerEnabled: values.SWAGGER_ENABLED,
 };

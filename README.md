@@ -67,7 +67,34 @@ Internal service-to-service endpoint:
 
 - `POST /internal/notifications/send`
 - Header: `x-internal-api-key: <INTERNAL_API_KEY>`
-- Body: `{ userId, type, title, message, link?, channels?, recipientEmail? }`
+- Legacy body: `{ userId, type, title, message, link?, channels?, recipientEmail? }`
+- MS-31 typed body: `{ type, recipients, data?, title?, message?, link?, dedupeByTypeAndLink? }`
+
+Typed MS-31 payloads derive recipients and channels from PRD 18.1. Example:
+
+```json
+{
+  "type": "appointment.booked",
+  "recipients": [
+    {
+      "role": "patient",
+      "userId": "55f75ac7-b85d-48a4-adba-df4ba1dcba61",
+      "email": "patient@example.com"
+    },
+    {
+      "role": "staff",
+      "userId": "e54b8b3b-6927-4c67-ad12-61e2e7bf86f0",
+      "email": "doctor@example.com"
+    }
+  ],
+  "data": {
+    "appointmentId": "appointment-id",
+    "serviceName": "Initial Consultation",
+    "departmentName": "Cardiology",
+    "scheduledAt": "2030-01-02T09:00:00.000Z"
+  }
+}
+```
 
 Authenticated user endpoints:
 

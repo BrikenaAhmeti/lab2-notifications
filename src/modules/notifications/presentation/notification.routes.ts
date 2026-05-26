@@ -10,7 +10,7 @@ import { NotificationController } from './notification.controller';
 
 const repository = new PrismaNotificationRepository(prisma);
 const emailService = new NodemailerEmailService();
-const notificationService = new NotificationService(repository, emailService);
+export const notificationService = new NotificationService(repository, emailService);
 const controller = new NotificationController(notificationService);
 
 export const notificationRoutes = Router();

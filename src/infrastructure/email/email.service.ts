@@ -1,22 +1,30 @@
 import nodemailer, { Transporter } from 'nodemailer';
 
 import { env } from '../../config/env';
-import { Notification } from '../../modules/notifications/domain/notification.entity';
-import { NotificationEmailService } from '../../modules/notifications/domain/notification-email.service';
+import {
+    EmailNotificationContent,
+    NotificationEmailService,
+} from '../../modules/notifications/domain/notification-email.service';
+import { renderNotificationEmail } from '../../services/email/templates/notification-email-templates';
 
 export class NodemailerEmailService implements NotificationEmailService {
     private transporter?: Transporter;
 
-    async sendNotification(notification: Notification, recipientEmail?: string): Promise<void> {
+    async sendNotification(
+        notification: EmailNotificationContent,
+        recipientEmail?: string,
+    ): Promise<void> {
         if (!env.smtp.host || !recipientEmail) {
             return;
         }
 
+        const email = renderNotificationEmail(notification);
+
         await this.getTransporter().sendMail({
             from: env.smtp.from,
             to: recipientEmail,
-            subject: notification.title,
-            text: `${notification.message}${notification.link ? `\n\n${notification.link}` : ''}`,
+            subject: email.subject,
+            text: email.text,
         });
     }
 

@@ -1,11 +1,11 @@
 import { PrismaClient } from '../../../generated/prisma';
 import { AppError } from '../../../shared/core/errors/app-error';
 import {
-    CreateNotificationInput,
     ListNotificationsInput,
     Notification,
     NotificationChannel,
     PaginatedNotifications,
+    PersistNotificationInput,
 } from '../domain/notification.entity';
 import { NotificationRepository } from '../domain/notification.repository';
 
@@ -14,7 +14,7 @@ type PrismaNotification = Awaited<ReturnType<PrismaClient['notification']['creat
 export class PrismaNotificationRepository implements NotificationRepository {
     constructor(private readonly prisma: PrismaClient) {}
 
-    async create(input: Omit<Required<CreateNotificationInput>, 'recipientEmail'>): Promise<Notification> {
+    async create(input: PersistNotificationInput): Promise<Notification> {
         const notification = await this.prisma.notification.create({
             data: {
                 userId: input.userId,
@@ -27,6 +27,23 @@ export class PrismaNotificationRepository implements NotificationRepository {
         });
 
         return this.toEntity(notification);
+    }
+
+    async findByUserTypeAndLink(
+        userId: string,
+        type: string,
+        link: string,
+    ): Promise<Notification | null> {
+        const notification = await this.prisma.notification.findFirst({
+            where: {
+                userId,
+                type,
+                link,
+            },
+            orderBy: { createdAt: 'desc' },
+        });
+
+        return notification ? this.toEntity(notification) : null;
     }
 
     async list(input: ListNotificationsInput): Promise<PaginatedNotifications> {

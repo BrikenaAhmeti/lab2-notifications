@@ -7,6 +7,13 @@ import {
     NotificationChannel,
     PaginatedNotifications,
 } from '../domain/notification.entity';
+import {
+    notificationEventDefinitions,
+    NotificationRecipient,
+    renderNotificationEvent,
+    SendTypedNotificationInput,
+    TypedNotificationResult,
+} from '../domain/notification-events';
 import { NotificationEmailService } from '../domain/notification-email.service';
 import { NotificationRepository } from '../domain/notification.repository';
 
@@ -18,12 +25,26 @@ export class NotificationService {
 
     async create(input: CreateNotificationInput): Promise<Notification> {
         const channels = this.normalizeChannels(input.channels);
+        const link = input.link ?? null;
+
+        if (input.dedupeByTypeAndLink && link) {
+            const existing = await this.repository.findByUserTypeAndLink(
+                input.userId,
+                input.type,
+                link,
+            );
+
+            if (existing) {
+                return existing;
+            }
+        }
+
         const notification = await this.repository.create({
             userId: input.userId,
             type: input.type,
             title: input.title,
             message: input.message,
-            link: input.link ?? null,
+            link,
             channels,
         });
 
@@ -34,6 +55,52 @@ export class NotificationService {
         }
 
         return notification;
+    }
+
+    async sendTyped(input: SendTypedNotificationInput): Promise<TypedNotificationResult> {
+        const definition = notificationEventDefinitions[input.type];
+        const rendered = renderNotificationEvent(input.type, input.data);
+        const title = input.title ?? rendered.title;
+        const message = input.message ?? rendered.message;
+        const link = input.link ?? rendered.link ?? null;
+
+        this.validateTypedRecipients(input.recipients, definition);
+
+        const notifications: Notification[] = [];
+        let emailOnlyCount = 0;
+
+        for (const recipient of input.recipients) {
+            const recipientLink = recipient.link ?? link;
+
+            if (definition.channels.includes('in_app')) {
+                const notification = await this.create({
+                    userId: recipient.userId as string,
+                    type: input.type,
+                    title,
+                    message,
+                    link: recipientLink,
+                    channels: [...definition.channels],
+                    recipientEmail: recipient.email,
+                    dedupeByTypeAndLink: input.dedupeByTypeAndLink,
+                });
+
+                notifications.push(notification);
+                continue;
+            }
+
+            await this.emailService.sendNotification(
+                {
+                    type: input.type,
+                    title,
+                    message,
+                    link: recipientLink,
+                },
+                recipient.email,
+            );
+            emailOnlyCount += 1;
+        }
+
+        return { notifications, emailOnlyCount };
     }
 
     list(input: ListNotificationsInput): Promise<PaginatedNotifications> {
@@ -67,5 +134,36 @@ export class NotificationService {
         }
 
         return unique;
+    }
+
+    private validateTypedRecipients(
+        recipients: NotificationRecipient[],
+        definition: {
+            channels: readonly NotificationChannel[];
+            recipientRoles: readonly NotificationRecipient['role'][];
+        },
+    ) {
+        for (const recipient of recipients) {
+            if (!definition.recipientRoles.includes(recipient.role)) {
+                throw new AppError(
+                    `${recipient.role} is not a valid recipient for this notification type`,
+                    422,
+                );
+            }
+
+            if (definition.channels.includes('in_app') && !recipient.userId) {
+                throw new AppError('In-app notification recipients require userId', 422);
+            }
+
+            if (definition.channels.includes('email') && !recipient.email) {
+                throw new AppError('Email notification recipients require email', 422);
+            }
+        }
+
+        for (const role of definition.recipientRoles) {
+            if (!recipients.some((recipient) => recipient.role === role)) {
+                throw new AppError(`Missing ${role} recipient`, 422);
+            }
+        }
     }
 }

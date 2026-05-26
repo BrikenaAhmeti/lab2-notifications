@@ -1,5 +1,13 @@
 import { Notification } from './notification.entity';
 
+export type EmailNotificationContent = Pick<
+    Notification,
+    'type' | 'title' | 'message' | 'link'
+>;
+
 export interface NotificationEmailService {
-    sendNotification(notification: Notification, recipientEmail?: string): Promise<void>;
+    sendNotification(
+        notification: EmailNotificationContent,
+        recipientEmail?: string,
+    ): Promise<void>;
 }

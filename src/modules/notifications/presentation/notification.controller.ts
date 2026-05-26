@@ -15,6 +15,13 @@ export class NotificationController {
     send = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const payload = sendNotificationSchema.parse(req.body);
+
+            if ('recipients' in payload) {
+                const result = await this.notificationService.sendTyped(payload);
+
+                return res.status(201).json({ data: result });
+            }
+
             const notification = await this.notificationService.create(payload);
 
             return res.status(201).json({ data: notification });
