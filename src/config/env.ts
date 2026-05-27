@@ -18,6 +18,8 @@ const envSchema = z.object({
     SMTP_PASS: z.string().optional(),
     SMTP_FROM: z.string().email().default('notifications@medsphere.local'),
     CORE_SERVICE_URL: z.string().url().optional(),
+    CHAT_UPLOAD_DIR: z.string().default('uploads/chat'),
+    CHAT_PUBLIC_BASE_URL: z.string().url().optional(),
     APPOINTMENT_REMINDER_JOB_ENABLED: z.coerce.boolean().default(true),
     SWAGGER_ENABLED: z.coerce.boolean().default(true),
 });
@@ -51,6 +53,10 @@ export const env = {
         from: values.SMTP_FROM,
     },
     coreServiceUrl: values.CORE_SERVICE_URL,
+    chat: {
+        uploadDir: values.CHAT_UPLOAD_DIR,
+        publicBaseUrl: values.CHAT_PUBLIC_BASE_URL,
+    },
     appointmentReminderJobEnabled:
         values.APPOINTMENT_REMINDER_JOB_ENABLED && values.NODE_ENV !== 'test',
     swaggerEnabled: values.SWAGGER_ENABLED,

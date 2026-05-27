@@ -1,6 +1,6 @@
 # MedSphere Notification Service
 
-Backend foundation for **MS-14: Notification Service - DB + Socket.IO + Core API**.
+Backend foundation for **MS-14: Notification Service - DB + Socket.IO + Core API** and **MS-52: Chat Backend**.
 
 ## What This Service Owns
 
@@ -8,6 +8,7 @@ Backend foundation for **MS-14: Notification Service - DB + Socket.IO + Core API
 - Internal notification creation API for other MedSphere services
 - Authenticated user notification API
 - Socket.IO real-time delivery
+- Chat rooms, message history, unread counts, read receipts, and attachment URLs
 - Optional Redis Socket.IO adapter for multi-instance broadcasting
 - Optional MongoDB bootstrap for `chat_rooms`, `chat_messages`, and `activity_streams`
 - Optional SMTP email delivery for notifications with the `email` channel
@@ -42,6 +43,8 @@ SMTP_PORT=587
 SMTP_USER="smtp-user"
 SMTP_PASS="smtp-password"
 SMTP_FROM="notifications@medsphere.local"
+CHAT_UPLOAD_DIR="uploads/chat"
+CHAT_PUBLIC_BASE_URL=""
 SWAGGER_ENABLED=true
 ```
 
@@ -103,6 +106,15 @@ Authenticated user endpoints:
 - `PUT /api/notifications/read-all`
 - `DELETE /api/notifications/:id`
 
+Chat endpoints:
+
+- `POST /api/chat/rooms` - create or reuse a direct room
+- `GET /api/chat/rooms?page=&limit=` - list my rooms with unread counts
+- `GET /api/chat/rooms/:roomId/messages?page=&limit=` - message history, newest last
+- `POST /api/chat/rooms/:roomId/messages` - send text, file, or image message
+- `PATCH /api/chat/rooms/:roomId/read` - mark received messages as read
+- `POST /api/chat/rooms/:roomId/upload` - upload an attachment by raw bytes with `x-file-name`, or JSON `{ fileName, mimeType, contentBase64 }`
+
 Socket.IO clients connect with:
 
 ```ts
@@ -116,6 +128,8 @@ Events emitted by the service:
 - `notification:new`
 - `notification:read`
 - `notification:all-read`
+- `chat:message`
+- `chat:read`
 
 ## Tests
 

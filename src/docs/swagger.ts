@@ -6,7 +6,7 @@ export const swaggerSpec = swaggerJSDoc({
         info: {
             title: 'MedSphere Notification Service API',
             version: '1.0.0',
-            description: 'Notification service foundation for MS-14: internal send API, user notification API, and Socket.IO events.',
+            description: 'Notification service APIs for notifications, Socket.IO events, and MS-52 chat backend.',
         },
         servers: [{ url: 'http://localhost:3005' }],
         components: {
@@ -162,6 +162,79 @@ export const swaggerSpec = swaggerJSDoc({
                         { $ref: '#/components/schemas/LegacySendNotificationRequest' },
                     ],
                 },
+                ChatMessage: {
+                    type: 'object',
+                    properties: {
+                        id: { type: 'string', format: 'uuid' },
+                        roomId: { type: 'string', format: 'uuid' },
+                        senderId: { type: 'string', format: 'uuid' },
+                        content: { type: 'string', example: 'See you at 10:00.' },
+                        type: { type: 'string', enum: ['text', 'file', 'image'] },
+                        fileUrl: { type: 'string', nullable: true, example: '/uploads/chat/result.pdf' },
+                        isRead: { type: 'boolean' },
+                        readAt: { type: 'string', format: 'date-time', nullable: true },
+                        createdAt: { type: 'string', format: 'date-time' },
+                    },
+                },
+                ChatRoom: {
+                    type: 'object',
+                    properties: {
+                        id: { type: 'string', format: 'uuid' },
+                        participants: {
+                            type: 'array',
+                            items: { type: 'string', format: 'uuid' },
+                        },
+                        type: { type: 'string', enum: ['direct'] },
+                        lastMessageAt: { type: 'string', format: 'date-time', nullable: true },
+                        lastMessage: {
+                            nullable: true,
+                            allOf: [{ $ref: '#/components/schemas/ChatMessage' }],
+                        },
+                        unreadCount: { type: 'integer', minimum: 0 },
+                        createdAt: { type: 'string', format: 'date-time' },
+                        updatedAt: { type: 'string', format: 'date-time' },
+                    },
+                },
+                CreateDirectChatRoomRequest: {
+                    type: 'object',
+                    required: ['participantId', 'participantRole'],
+                    properties: {
+                        participantId: { type: 'string', format: 'uuid' },
+                        participantRole: {
+                            type: 'string',
+                            enum: [
+                                'patient',
+                                'doctor',
+                                'staff',
+                                'nurse',
+                                'lab_technician',
+                                'pharmacist',
+                                'receptionist',
+                                'admin',
+                                'department_head',
+                                'super_admin',
+                            ],
+                        },
+                    },
+                },
+                SendChatMessageRequest: {
+                    type: 'object',
+                    required: ['content'],
+                    properties: {
+                        content: { type: 'string', maxLength: 5000 },
+                        type: { type: 'string', enum: ['text', 'file', 'image'], default: 'text' },
+                        fileUrl: { type: 'string', nullable: true },
+                    },
+                },
+                ChatAttachment: {
+                    type: 'object',
+                    properties: {
+                        fileName: { type: 'string' },
+                        fileUrl: { type: 'string' },
+                        mimeType: { type: 'string' },
+                        size: { type: 'integer' },
+                    },
+                },
             },
         },
         paths: {
@@ -278,6 +351,163 @@ export const swaggerSpec = swaggerJSDoc({
                     responses: {
                         204: { description: 'Notification deleted' },
                         404: { description: 'Notification not found' },
+                    },
+                },
+            },
+            '/api/chat/rooms': {
+                get: {
+                    tags: ['Chat'],
+                    summary: 'List chat rooms for the authenticated user',
+                    security: [{ bearerAuth: [] }],
+                    parameters: [
+                        {
+                            in: 'query',
+                            name: 'page',
+                            schema: { type: 'integer', minimum: 1, default: 1 },
+                        },
+                        {
+                            in: 'query',
+                            name: 'limit',
+                            schema: { type: 'integer', minimum: 1, maximum: 100, default: 20 },
+                        },
+                    ],
+                    responses: {
+                        200: { description: 'Paginated chat rooms with unread counts' },
+                        401: { description: 'Missing or invalid JWT' },
+                    },
+                },
+                post: {
+                    tags: ['Chat'],
+                    summary: 'Create or find a direct chat room',
+                    security: [{ bearerAuth: [] }],
+                    requestBody: {
+                        required: true,
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/CreateDirectChatRoomRequest' },
+                            },
+                        },
+                    },
+                    responses: {
+                        201: { description: 'Direct room ready' },
+                        403: { description: 'Chat access denied' },
+                    },
+                },
+            },
+            '/api/chat/rooms/{roomId}/messages': {
+                get: {
+                    tags: ['Chat'],
+                    summary: 'List paginated room messages, returned newest last',
+                    security: [{ bearerAuth: [] }],
+                    parameters: [
+                        {
+                            in: 'path',
+                            name: 'roomId',
+                            required: true,
+                            schema: { type: 'string', format: 'uuid' },
+                        },
+                        {
+                            in: 'query',
+                            name: 'page',
+                            schema: { type: 'integer', minimum: 1, default: 1 },
+                        },
+                        {
+                            in: 'query',
+                            name: 'limit',
+                            schema: { type: 'integer', minimum: 1, maximum: 100, default: 20 },
+                        },
+                    ],
+                    responses: {
+                        200: { description: 'Paginated chat messages' },
+                        404: { description: 'Room not found for this user' },
+                    },
+                },
+                post: {
+                    tags: ['Chat'],
+                    summary: 'Send a text, file, or image message',
+                    security: [{ bearerAuth: [] }],
+                    parameters: [
+                        {
+                            in: 'path',
+                            name: 'roomId',
+                            required: true,
+                            schema: { type: 'string', format: 'uuid' },
+                        },
+                    ],
+                    requestBody: {
+                        required: true,
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/SendChatMessageRequest' },
+                            },
+                        },
+                    },
+                    responses: {
+                        201: { description: 'Message persisted and emitted with chat:message' },
+                        404: { description: 'Room not found for this user' },
+                    },
+                },
+            },
+            '/api/chat/rooms/{roomId}/read': {
+                patch: {
+                    tags: ['Chat'],
+                    summary: 'Mark all received messages in a room as read',
+                    security: [{ bearerAuth: [] }],
+                    parameters: [
+                        {
+                            in: 'path',
+                            name: 'roomId',
+                            required: true,
+                            schema: { type: 'string', format: 'uuid' },
+                        },
+                    ],
+                    responses: {
+                        200: { description: 'Messages marked read and chat:read emitted' },
+                        404: { description: 'Room not found for this user' },
+                    },
+                },
+            },
+            '/api/chat/rooms/{roomId}/upload': {
+                post: {
+                    tags: ['Chat'],
+                    summary: 'Upload a chat attachment',
+                    security: [{ bearerAuth: [] }],
+                    parameters: [
+                        {
+                            in: 'path',
+                            name: 'roomId',
+                            required: true,
+                            schema: { type: 'string', format: 'uuid' },
+                        },
+                        {
+                            in: 'header',
+                            name: 'x-file-name',
+                            schema: { type: 'string' },
+                            description: 'Required for application/octet-stream uploads.',
+                        },
+                    ],
+                    requestBody: {
+                        required: true,
+                        content: {
+                            'application/octet-stream': {
+                                schema: { type: 'string', format: 'binary' },
+                            },
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    required: ['fileName', 'contentBase64'],
+                                    properties: {
+                                        fileName: { type: 'string' },
+                                        mimeType: { type: 'string' },
+                                        contentBase64: { type: 'string' },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    responses: {
+                        201: { description: 'Attachment stored and URL returned' },
+                        404: { description: 'Room not found for this user' },
                     },
                 },
             },

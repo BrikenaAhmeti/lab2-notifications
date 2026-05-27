@@ -5,6 +5,7 @@ import { createClient } from 'redis';
 import { Server, Socket } from 'socket.io';
 
 import { env } from '../config/env';
+import { chatGateway } from './chat.gateway';
 import { notificationGateway } from './notification.gateway';
 
 type SocketJwtPayload = {
@@ -62,6 +63,7 @@ export async function createSocketServer(httpServer: HttpServer) {
     });
 
     notificationGateway.bind(io);
+    chatGateway.bind(io);
 
     return io;
 }
