@@ -31,6 +31,8 @@ export async function initializeMongoCollections() {
         db.collection('chat_messages').createIndex({ roomId: 1, createdAt: -1 }),
         db.collection('chat_messages').createIndex({ roomId: 1, isRead: 1, senderId: 1 }),
         db.collection('activity_streams').createIndex({ createdAt: -1 }),
+        db.collection('activity_streams').createIndex({ actionType: 1, createdAt: -1 }),
+        db.collection('activity_streams').createIndex({ facilityId: 1, createdAt: -1 }),
     ]);
 }
 

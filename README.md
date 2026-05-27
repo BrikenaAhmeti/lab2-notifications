@@ -1,6 +1,6 @@
 # MedSphere Notification Service
 
-Backend foundation for **MS-14: Notification Service - DB + Socket.IO + Core API** and **MS-52: Chat Backend**.
+Backend foundation for **MS-14: Notification Service - DB + Socket.IO + Core API**, **MS-52: Chat Backend**, and the **MS-54 admin dashboard activity feed**.
 
 ## What This Service Owns
 
@@ -9,6 +9,7 @@ Backend foundation for **MS-14: Notification Service - DB + Socket.IO + Core API
 - Authenticated user notification API
 - Socket.IO real-time delivery
 - Chat rooms, message history, unread counts, read receipts, and attachment URLs
+- Admin dashboard recent activity feed backed by MongoDB `activity_streams`
 - Optional Redis Socket.IO adapter for multi-instance broadcasting
 - Optional MongoDB bootstrap for `chat_rooms`, `chat_messages`, and `activity_streams`
 - Optional SMTP email delivery for notifications with the `email` channel
@@ -106,6 +107,11 @@ Authenticated user endpoints:
 - `PUT /api/notifications/read-all`
 - `DELETE /api/notifications/:id`
 
+Dashboard activity endpoints:
+
+- `GET /api/dashboard/activity?page=1&limit=20` - returns recent facility activity as `{ id, actionType, description, actorName, entityLabel, entityLink, createdAt }`
+- `POST /internal/dashboard/activity` - internal-only domain event ingress for activity-only events such as `payment.recorded`
+
 Chat endpoints:
 
 - `POST /api/chat/rooms` - create or reuse a direct room
@@ -128,6 +134,7 @@ Events emitted by the service:
 - `notification:new`
 - `notification:read`
 - `notification:all-read`
+- `activity:new`
 - `chat:message`
 - `chat:read`
 

@@ -6,7 +6,7 @@ export const swaggerSpec = swaggerJSDoc({
         info: {
             title: 'MedSphere Notification Service API',
             version: '1.0.0',
-            description: 'Notification service APIs for notifications, Socket.IO events, and MS-52 chat backend.',
+            description: 'Notification service APIs for notifications, Socket.IO events, MS-52 chat, and MS-54 dashboard activity.',
         },
         servers: [{ url: 'http://localhost:3005' }],
         components: {
@@ -189,6 +189,88 @@ export const swaggerSpec = swaggerJSDoc({
                         },
                     },
                 },
+                ActivityStreamItem: {
+                    type: 'object',
+                    properties: {
+                        id: { type: 'string', format: 'uuid' },
+                        actionType: {
+                            type: 'string',
+                            example: 'payment.recorded',
+                        },
+                        description: {
+                            type: 'string',
+                            example: 'Rita Receptionist recorded a 75.00 EUR payment for Ada Lovelace.',
+                        },
+                        actorName: {
+                            type: 'string',
+                            example: 'Rita Receptionist',
+                        },
+                        entityLabel: {
+                            type: 'string',
+                            example: 'INV-1001',
+                        },
+                        entityLink: {
+                            type: 'string',
+                            nullable: true,
+                            example: '/admin/billing/billing-1',
+                        },
+                        createdAt: { type: 'string', format: 'date-time' },
+                    },
+                },
+                PaginatedActivityStreamResponse: {
+                    type: 'object',
+                    properties: {
+                        data: {
+                            type: 'array',
+                            items: { $ref: '#/components/schemas/ActivityStreamItem' },
+                        },
+                        meta: {
+                            type: 'object',
+                            properties: {
+                                page: { type: 'integer', minimum: 1 },
+                                limit: { type: 'integer', minimum: 1 },
+                                totalItems: { type: 'integer', minimum: 0 },
+                                totalPages: { type: 'integer', minimum: 0 },
+                            },
+                        },
+                    },
+                },
+                DomainActivityEventRequest: {
+                    type: 'object',
+                    required: ['type'],
+                    properties: {
+                        type: {
+                            type: 'string',
+                            enum: [
+                                'appointment.status_changed',
+                                'appointment.booked',
+                                'appointment.confirmed',
+                                'appointment.cancelled',
+                                'appointment.rescheduled',
+                                'appointment.no_show',
+                                'appointment.ai_booked',
+                                'lab.result_entered',
+                                'lab.results.completed',
+                                'lab.results.reviewed',
+                                'payment.recorded',
+                                'inventory.stock_alert',
+                                'inventory.low_stock',
+                                'inventory.expiry_warning',
+                                'prescription.medication_out_of_stock',
+                            ],
+                        },
+                        data: {
+                            type: 'object',
+                            additionalProperties: true,
+                            description: 'Domain event data. Supports actorName, patientName, entity labels and links, ids, facilityId, departmentId, amount, currency, and activity* display overrides.',
+                        },
+                        occurredAt: {
+                            type: 'string',
+                            format: 'date-time',
+                            description: 'Optional event timestamp. Defaults to write time.',
+                        },
+                    },
+                },
                 ChatMessage: {
                     type: 'object',
                     properties: {
@@ -320,6 +402,72 @@ export const swaggerSpec = swaggerJSDoc({
                             },
                         },
                         401: { description: 'Invalid internal API key' },
+                    },
+                },
+            },
+            '/internal/dashboard/activity': {
+                post: {
+                    tags: ['Internal Dashboard'],
+                    summary: 'Record a facility activity stream item from a domain event',
+                    security: [{ internalApiKey: [] }],
+                    requestBody: {
+                        required: true,
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/DomainActivityEventRequest' },
+                            },
+                        },
+                    },
+                    responses: {
+                        201: {
+                            description: 'Activity item written to MongoDB and emitted as activity:new',
+                            content: {
+                                'application/json': {
+                                    schema: {
+                                        type: 'object',
+                                        properties: {
+                                            data: { $ref: '#/components/schemas/ActivityStreamItem' },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                        401: { description: 'Invalid internal API key' },
+                        422: { description: 'Unsupported domain activity event' },
+                        503: { description: 'MongoDB is not configured for activity streams' },
+                    },
+                },
+            },
+            '/api/dashboard/activity': {
+                get: {
+                    tags: ['Dashboard'],
+                    summary: 'List recent facility activity for the admin dashboard',
+                    security: [{ bearerAuth: [] }],
+                    parameters: [
+                        {
+                            in: 'query',
+                            name: 'page',
+                            schema: { type: 'integer', minimum: 1, default: 1 },
+                        },
+                        {
+                            in: 'query',
+                            name: 'limit',
+                            schema: { type: 'integer', minimum: 1, maximum: 100, default: 20 },
+                        },
+                    ],
+                    responses: {
+                        200: {
+                            description: 'Paginated activity_streams feed ordered by newest activity first',
+                            content: {
+                                'application/json': {
+                                    schema: {
+                                        $ref: '#/components/schemas/PaginatedActivityStreamResponse',
+                                    },
+                                },
+                            },
+                        },
+                        401: { description: 'Missing or invalid JWT' },
+                        503: { description: 'MongoDB is not configured for activity streams' },
                     },
                 },
             },

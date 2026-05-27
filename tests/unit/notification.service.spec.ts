@@ -1,4 +1,5 @@
 import { NotificationService } from '../../src/modules/notifications/application/notification.service';
+import { ActivityService } from '../../src/modules/dashboard/application/activity.service';
 import { Notification } from '../../src/modules/notifications/domain/notification.entity';
 import { NotificationEmailService } from '../../src/modules/notifications/domain/notification-email.service';
 import { NotificationRepository } from '../../src/modules/notifications/domain/notification.repository';
@@ -17,7 +18,7 @@ const notification: Notification = {
     createdAt: new Date('2026-05-15T10:00:00.000Z'),
 };
 
-function createFixture() {
+function createFixture(activityService?: Pick<ActivityService, 'recordNotificationEvent'>) {
     const repository: jest.Mocked<NotificationRepository> = {
         create: jest.fn().mockImplementation(async (input) => ({
             ...notification,
@@ -43,7 +44,11 @@ function createFixture() {
     return {
         repository,
         emailService,
-        service: new NotificationService(repository, emailService),
+        service: new NotificationService(
+            repository,
+            emailService,
+            activityService as ActivityService | undefined,
+        ),
     };
 }
 
@@ -174,6 +179,48 @@ describe('NotificationService', () => {
         );
         expect(emailService.sendNotification).toHaveBeenCalledTimes(2);
         expect(emitNew).toHaveBeenCalledTimes(2);
+    });
+
+    it('records dashboard activity once when a typed facility event is processed', async () => {
+        const activityService = {
+            recordNotificationEvent: jest.fn().mockResolvedValue(null),
+        };
+        const { service } = createFixture(activityService);
+        jest.spyOn(notificationGateway, 'emitNew').mockImplementation();
+
+        await service.sendTyped({
+            type: 'appointment.booked',
+            recipients: [
+                {
+                    role: 'patient',
+                    userId: '55f75ac7-b85d-48a4-adba-df4ba1dcba61',
+                    email: 'patient@example.com',
+                },
+                {
+                    role: 'staff',
+                    userId: 'e54b8b3b-6927-4c67-ad12-61e2e7bf86f0',
+                    email: 'staff@example.com',
+                },
+            ],
+            data: {
+                appointmentId: 'a1',
+                actorName: 'Rita Receptionist',
+                patientName: 'Ada Lovelace',
+                serviceName: 'Initial Consultation',
+                scheduledAt: '2030-01-02T09:00:00.000Z',
+            },
+        });
+
+        expect(activityService.recordNotificationEvent).toHaveBeenCalledTimes(1);
+        expect(activityService.recordNotificationEvent).toHaveBeenCalledWith({
+            type: 'appointment.booked',
+            data: expect.objectContaining({
+                actorName: 'Rita Receptionist',
+                patientName: 'Ada Lovelace',
+            }),
+            fallbackDescription: 'Initial Consultation in your department has been booked for 2030-01-02 09:00 UTC.',
+            fallbackEntityLink: '/appointments/a1',
+        });
     });
 
     it('sends typed email-only account notifications without creating in-app records', async () => {

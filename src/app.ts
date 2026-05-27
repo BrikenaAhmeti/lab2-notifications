@@ -6,6 +6,7 @@ import swaggerUi from 'swagger-ui-express';
 import { env } from './config/env';
 import { swaggerSpec } from './docs/swagger';
 import { chatRoutes } from './modules/chat/presentation/chat.routes';
+import { dashboardRoutes, internalDashboardRoutes } from './modules/dashboard/presentation/dashboard.routes';
 import { internalNotificationRoutes, notificationRoutes } from './modules/notifications/presentation/notification.routes';
 import { errorHandler } from './shared/middleware/error-handler';
 import { notFoundHandler } from './shared/middleware/not-found';
@@ -27,7 +28,9 @@ export function createApp() {
     }
 
     app.use('/uploads/chat', express.static(env.chat.uploadDir));
+    app.use('/internal/dashboard', internalDashboardRoutes);
     app.use('/internal/notifications', internalNotificationRoutes);
+    app.use('/api/dashboard', dashboardRoutes);
     app.use('/api/notifications', notificationRoutes);
     app.use('/api/chat', chatRoutes);
 

@@ -1,16 +1,22 @@
 import { Router } from 'express';
 
+import { env } from '../../../config/env';
 import { NodemailerEmailService } from '../../../infrastructure/email/email.service';
 import { prisma } from '../../../infrastructure/db/prisma';
 import { authenticate } from '../../../shared/middleware/authenticate';
 import { requireInternalApiKey } from '../../../shared/middleware/internal-api-key';
+import { activityService } from '../../dashboard/presentation/dashboard.routes';
 import { NotificationService } from '../application/notification.service';
 import { PrismaNotificationRepository } from '../infrastructure/notification.prisma.repository';
 import { NotificationController } from './notification.controller';
 
 const repository = new PrismaNotificationRepository(prisma);
 const emailService = new NodemailerEmailService();
-export const notificationService = new NotificationService(repository, emailService);
+export const notificationService = new NotificationService(
+    repository,
+    emailService,
+    env.mongoUrl ? activityService : undefined,
+);
 const controller = new NotificationController(notificationService);
 
 export const notificationRoutes = Router();

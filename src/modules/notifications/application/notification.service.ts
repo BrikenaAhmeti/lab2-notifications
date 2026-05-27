@@ -1,5 +1,6 @@
 import { notificationGateway } from '../../../socket/notification.gateway';
 import { AppError } from '../../../shared/core/errors/app-error';
+import { ActivityService } from '../../dashboard/application/activity.service';
 import {
     CreateNotificationInput,
     ListNotificationsInput,
@@ -21,6 +22,7 @@ export class NotificationService {
     constructor(
         private readonly repository: NotificationRepository,
         private readonly emailService: NotificationEmailService,
+        private readonly activityService?: ActivityService,
     ) {}
 
     async create(input: CreateNotificationInput): Promise<Notification> {
@@ -58,8 +60,9 @@ export class NotificationService {
     }
 
     async sendTyped(input: SendTypedNotificationInput): Promise<TypedNotificationResult> {
+        const data = input.data ?? {};
         const definition = notificationEventDefinitions[input.type];
-        const rendered = renderNotificationEvent(input.type, input.data);
+        const rendered = renderNotificationEvent(input.type, data);
         const title = input.title ?? rendered.title;
         const message = input.message ?? rendered.message;
         const link = input.link ?? rendered.link ?? null;
@@ -99,6 +102,13 @@ export class NotificationService {
             );
             emailOnlyCount += 1;
         }
+
+        await this.activityService?.recordNotificationEvent({
+            type: input.type,
+            data,
+            fallbackDescription: message,
+            fallbackEntityLink: link,
+        });
 
         return { notifications, emailOnlyCount };
     }
