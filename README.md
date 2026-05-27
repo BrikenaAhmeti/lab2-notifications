@@ -101,7 +101,7 @@ Typed MS-31 payloads derive recipients and channels from PRD 18.1. Example:
 
 Authenticated user endpoints:
 
-- `GET /api/notifications?isRead=&page=&limit=`
+- `GET /api/notifications?isRead=&page=&limit=` - list my notifications; `isRead=false&page=1&limit=1` returns the unread count in `meta.totalItems` and `meta.unreadCount`
 - `PUT /api/notifications/:id/read`
 - `PUT /api/notifications/read-all`
 - `DELETE /api/notifications/:id`

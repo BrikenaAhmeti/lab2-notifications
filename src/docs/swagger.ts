@@ -162,6 +162,33 @@ export const swaggerSpec = swaggerJSDoc({
                         { $ref: '#/components/schemas/LegacySendNotificationRequest' },
                     ],
                 },
+                PaginatedNotificationsResponse: {
+                    type: 'object',
+                    properties: {
+                        data: {
+                            type: 'array',
+                            items: { $ref: '#/components/schemas/Notification' },
+                        },
+                        meta: {
+                            type: 'object',
+                            properties: {
+                                page: { type: 'integer', minimum: 1 },
+                                limit: { type: 'integer', minimum: 1 },
+                                totalItems: {
+                                    type: 'integer',
+                                    minimum: 0,
+                                    description: 'Total notifications matching the current filters. For isRead=false this is the unread count.',
+                                },
+                                totalPages: { type: 'integer', minimum: 0 },
+                                unreadCount: {
+                                    type: 'integer',
+                                    minimum: 0,
+                                    description: 'Total unread notifications for the authenticated user.',
+                                },
+                            },
+                        },
+                    },
+                },
                 ChatMessage: {
                     type: 'object',
                     properties: {
@@ -193,6 +220,24 @@ export const swaggerSpec = swaggerJSDoc({
                         unreadCount: { type: 'integer', minimum: 0 },
                         createdAt: { type: 'string', format: 'date-time' },
                         updatedAt: { type: 'string', format: 'date-time' },
+                    },
+                },
+                PaginatedChatRoomsResponse: {
+                    type: 'object',
+                    properties: {
+                        data: {
+                            type: 'array',
+                            items: { $ref: '#/components/schemas/ChatRoom' },
+                        },
+                        meta: {
+                            type: 'object',
+                            properties: {
+                                page: { type: 'integer', minimum: 1 },
+                                limit: { type: 'integer', minimum: 1 },
+                                totalItems: { type: 'integer', minimum: 0 },
+                                totalPages: { type: 'integer', minimum: 0 },
+                            },
+                        },
                     },
                 },
                 CreateDirectChatRoomRequest: {
@@ -301,7 +346,16 @@ export const swaggerSpec = swaggerJSDoc({
                         },
                     ],
                     responses: {
-                        200: { description: 'Paginated notifications' },
+                        200: {
+                            description: 'Paginated notifications. Use isRead=false&page=1&limit=1 and meta.totalItems or meta.unreadCount for the unread count.',
+                            content: {
+                                'application/json': {
+                                    schema: {
+                                        $ref: '#/components/schemas/PaginatedNotificationsResponse',
+                                    },
+                                },
+                            },
+                        },
                         401: { description: 'Missing or invalid JWT' },
                     },
                 },
@@ -372,7 +426,16 @@ export const swaggerSpec = swaggerJSDoc({
                         },
                     ],
                     responses: {
-                        200: { description: 'Paginated chat rooms with unread counts' },
+                        200: {
+                            description: 'Paginated chat rooms with unread counts',
+                            content: {
+                                'application/json': {
+                                    schema: {
+                                        $ref: '#/components/schemas/PaginatedChatRoomsResponse',
+                                    },
+                                },
+                            },
+                        },
                         401: { description: 'Missing or invalid JWT' },
                     },
                 },

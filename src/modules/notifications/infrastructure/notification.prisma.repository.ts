@@ -52,14 +52,22 @@ export class PrismaNotificationRepository implements NotificationRepository {
             ...(typeof input.isRead === 'boolean' ? { isRead: input.isRead } : {}),
         };
 
-        const [items, totalItems] = await Promise.all([
+        const totalItemsPromise = this.prisma.notification.count({ where });
+        const unreadCountPromise = input.isRead === false
+            ? totalItemsPromise
+            : this.prisma.notification.count({
+                where: { userId: input.userId, isRead: false },
+            });
+
+        const [items, totalItems, unreadCount] = await Promise.all([
             this.prisma.notification.findMany({
                 where,
                 orderBy: { createdAt: 'desc' },
                 skip: (input.page - 1) * input.limit,
                 take: input.limit,
             }),
-            this.prisma.notification.count({ where }),
+            totalItemsPromise,
+            unreadCountPromise,
         ]);
 
         return {
@@ -69,6 +77,7 @@ export class PrismaNotificationRepository implements NotificationRepository {
                 limit: input.limit,
                 totalItems,
                 totalPages: Math.ceil(totalItems / input.limit),
+                unreadCount,
             },
         };
     }

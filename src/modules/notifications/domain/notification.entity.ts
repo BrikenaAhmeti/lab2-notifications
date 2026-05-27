@@ -49,5 +49,6 @@ export type PaginatedNotifications = {
         limit: number;
         totalItems: number;
         totalPages: number;
+        unreadCount: number;
     };
 };

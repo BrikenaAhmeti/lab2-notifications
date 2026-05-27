@@ -1,4 +1,7 @@
-import { sendNotificationSchema } from '../../src/modules/notifications/presentation/notification.schemas';
+import {
+    listNotificationsQuerySchema,
+    sendNotificationSchema,
+} from '../../src/modules/notifications/presentation/notification.schemas';
 
 const payload = {
     userId: '55f75ac7-b85d-48a4-adba-df4ba1dcba61',
@@ -89,5 +92,21 @@ describe('sendNotificationSchema', () => {
                 ],
             }),
         ).toThrow();
+    });
+});
+
+describe('listNotificationsQuerySchema', () => {
+    it('accepts the unread-count query used by the frontend notification bell', () => {
+        const result = listNotificationsQuerySchema.parse({
+            isRead: 'false',
+            page: '1',
+            limit: '1',
+        });
+
+        expect(result).toEqual({
+            isRead: false,
+            page: 1,
+            limit: 1,
+        });
     });
 });
