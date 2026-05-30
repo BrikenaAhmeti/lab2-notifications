@@ -44,12 +44,14 @@ SMTP_PORT=587
 SMTP_USER="smtp-user"
 SMTP_PASS="smtp-password"
 SMTP_FROM="notifications@medsphere.local"
+CORE_SERVICE_URL="http://localhost:3007"
 CHAT_UPLOAD_DIR="uploads/chat"
 CHAT_PUBLIC_BASE_URL=""
+APPOINTMENT_REMINDER_JOB_ENABLED=true
 SWAGGER_ENABLED=true
 ```
 
-`MONGODB_URL`, `REDIS_URL`, and SMTP values are optional for local development. When `REDIS_URL` is omitted, Socket.IO still works in single-instance mode.
+`DATABASE_URL`, `JWT_ACCESS_SECRET`, and `INTERNAL_API_KEY` are required. `MONGODB_URL` is required for chat and dashboard activity streams, `REDIS_URL` is only needed for multi-instance Socket.IO broadcasting, SMTP values are only needed for email-channel delivery, and `CORE_SERVICE_URL` is only needed when the appointment reminder job should call the Core Service. This service does not use OpenAI, Whisper, GPT, or an OpenAI API key; those belong to the separate AI Service in the MedSphere architecture.
 
 ## Run Locally
 
@@ -63,7 +65,9 @@ npm run dev
 Service URLs:
 
 - Health: `GET http://localhost:3005/health`
-- Swagger: `http://localhost:3005/api-docs`
+- Swagger UI: `http://localhost:3005/api/docs`
+- Legacy Swagger UI alias: `http://localhost:3005/api-docs`
+- OpenAPI JSON: `GET http://localhost:3005/api/docs.json`
 
 ## API Surface
 

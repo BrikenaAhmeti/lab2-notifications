@@ -90,7 +90,7 @@ services:
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASS: ${SMTP_PASS:-}
       SMTP_FROM: ${SMTP_FROM:-notifications@medsphere.local}
-      SWAGGER_ENABLED: ${SWAGGER_ENABLED:-false}
+      SWAGGER_ENABLED: ${SWAGGER_ENABLED:-true}
     ports:
       - "${NOTIFICATION_SERVICE_PORT:-3005}:3005"
     depends_on:

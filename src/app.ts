@@ -24,7 +24,13 @@ export function createApp() {
     });
 
     if (env.swaggerEnabled) {
-        app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+        const swaggerUiHandler = swaggerUi.setup(swaggerSpec);
+
+        app.get(['/api/docs.json', '/api-docs.json'], (_req, res) => {
+            res.json(swaggerSpec);
+        });
+        app.use(['/api/docs', '/api-docs'], swaggerUi.serve);
+        app.get(['/api/docs', '/api-docs'], swaggerUiHandler);
     }
 
     app.use('/uploads/chat', express.static(env.chat.uploadDir));
