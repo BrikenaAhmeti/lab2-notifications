@@ -22,7 +22,7 @@ export const swaggerSpec = swaggerJSDoc({
         },
         servers: [
             {
-                url: 'http://localhost:3005',
+                url: 'http://localhost:3008',
                 description: 'Local notification service',
             },
         ],

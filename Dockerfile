@@ -37,6 +37,6 @@ COPY --from=build /app/prisma ./prisma
 COPY --from=build /app/prisma.config.ts ./prisma.config.ts
 COPY --from=build /app/src/generated/prisma ./dist/src/generated/prisma
 
-EXPOSE 3005
+EXPOSE 3008
 
 CMD ["node", "dist/src/server.js"]

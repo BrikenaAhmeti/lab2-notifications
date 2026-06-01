@@ -4,7 +4,7 @@ import { z } from 'zod';
 dotenv.config();
 
 const envSchema = z.object({
-    PORT: z.coerce.number().default(3005),
+    PORT: z.coerce.number().default(3008),
     NODE_ENV: z.string().default('development'),
     DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
     MONGODB_URL: z.string().optional(),
