@@ -5,6 +5,7 @@ import { createClient } from 'redis';
 import { Server, Socket } from 'socket.io';
 
 import { env } from '../config/env';
+import { corsOrigin } from '../shared/cors-origin';
 import { chatGateway } from './chat.gateway';
 import { notificationGateway } from './notification.gateway';
 
@@ -21,7 +22,7 @@ type AuthenticatedSocket = Socket & {
 export async function createSocketServer(httpServer: HttpServer) {
     const io = new Server(httpServer, {
         cors: {
-            origin: env.corsOrigin,
+            origin: corsOrigin,
             credentials: true,
         },
     });

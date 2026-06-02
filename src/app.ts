@@ -8,6 +8,7 @@ import { swaggerSpec } from './docs/swagger';
 import { chatRoutes } from './modules/chat/presentation/chat.routes';
 import { dashboardRoutes, internalDashboardRoutes } from './modules/dashboard/presentation/dashboard.routes';
 import { internalNotificationRoutes, notificationRoutes } from './modules/notifications/presentation/notification.routes';
+import { corsOrigin } from './shared/cors-origin';
 import { errorHandler } from './shared/middleware/error-handler';
 import { notFoundHandler } from './shared/middleware/not-found';
 
@@ -15,7 +16,7 @@ export function createApp() {
     const app = express();
 
     app.use(helmet());
-    app.use(cors({ origin: env.corsOrigin, credentials: true }));
+    app.use(cors({ origin: corsOrigin, credentials: true }));
     app.use(morgan('dev'));
     app.use(express.json());
 
