@@ -16,17 +16,19 @@ import {
     ListChatRoomsHandler,
 } from '../application/chat.queries';
 import { LocalChatAttachmentStorage } from '../infrastructure/local-chat-attachment.storage';
+import { AuthUserDirectoryClient } from '../infrastructure/auth-user-directory.client';
 import { MongoChatRepository } from '../infrastructure/mongo-chat.repository';
 import { ChatController } from './chat.controller';
 
 const repository = new MongoChatRepository(getMongoDb);
+const participantDirectory = new AuthUserDirectoryClient();
 const attachmentStorage = new LocalChatAttachmentStorage(
     env.chat.uploadDir,
     env.chat.publicBaseUrl,
 );
 const handlers = {
     createDirectRoom: new CreateDirectChatRoomHandler(repository),
-    listRooms: new ListChatRoomsHandler(repository),
+    listRooms: new ListChatRoomsHandler(repository, participantDirectory),
     listMessages: new ListChatMessagesHandler(repository),
     sendMessage: new SendChatMessageHandler(repository),
     markRead: new MarkChatRoomReadHandler(repository),

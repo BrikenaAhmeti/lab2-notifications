@@ -17,6 +17,7 @@ const envSchema = z.object({
     SMTP_USER: z.string().optional(),
     SMTP_PASS: z.string().optional(),
     SMTP_FROM: z.string().email().default('notifications@medsphere.local'),
+    AUTH_SERVICE_URL: z.string().url().optional(),
     CORE_SERVICE_URL: z.string().url().optional(),
     CHAT_UPLOAD_DIR: z.string().default('uploads/chat'),
     CHAT_PUBLIC_BASE_URL: z.string().url().optional(),
@@ -52,6 +53,7 @@ export const env = {
         pass: values.SMTP_PASS,
         from: values.SMTP_FROM,
     },
+    authServiceUrl: values.AUTH_SERVICE_URL,
     coreServiceUrl: values.CORE_SERVICE_URL,
     chat: {
         uploadDir: values.CHAT_UPLOAD_DIR,

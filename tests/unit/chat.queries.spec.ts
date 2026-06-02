@@ -4,6 +4,7 @@ import {
     ListChatRoomsHandler,
     ListChatRoomsQuery,
 } from '../../src/modules/chat/application/chat.queries';
+import { ChatParticipantDirectory } from '../../src/modules/chat/domain/chat-participant-directory';
 import { ChatRepository } from '../../src/modules/chat/domain/chat.repository';
 
 const userId = '55f75ac7-b85d-48a4-adba-df4ba1dcba61';
@@ -46,6 +47,62 @@ describe('chat query handlers', () => {
             page: 1,
             limit: 20,
         });
+    });
+
+    it('enriches listed room participants from the user directory', async () => {
+        const repository = createRepository();
+        const otherUserId = 'e54b8b3b-6927-4c67-ad12-61e2e7bf86f0';
+        const createdAt = new Date('2026-05-20T10:00:00.000Z');
+        repository.listRooms.mockResolvedValue({
+            data: [
+                {
+                    id: roomId,
+                    participants: [userId, otherUserId],
+                    type: 'direct',
+                    lastMessageAt: createdAt,
+                    lastMessage: null,
+                    createdAt,
+                    updatedAt: createdAt,
+                    unreadCount: 0,
+                },
+            ],
+            meta: { page: 1, limit: 20, totalItems: 1, totalPages: 1 },
+        });
+        const participantDirectory: ChatParticipantDirectory = {
+            listByUserIds: jest.fn().mockResolvedValue(
+                new Map([
+                    [
+                        otherUserId,
+                        {
+                            id: otherUserId,
+                            userId: otherUserId,
+                            firstName: 'Anika',
+                            lastName: 'Rao',
+                            email: 'doctor@medsphere.local',
+                            role: 'doctor',
+                            roles: ['Doctor'],
+                        },
+                    ],
+                ]),
+            ),
+        };
+        const handler = new ListChatRoomsHandler(repository, participantDirectory);
+
+        const result = await handler.execute(new ListChatRoomsQuery(userId, 1, 20));
+
+        expect(participantDirectory.listByUserIds).toHaveBeenCalledWith([
+            userId,
+            otherUserId,
+        ]);
+        expect(result.data[0].participants).toEqual([
+            userId,
+            expect.objectContaining({
+                userId: otherUserId,
+                firstName: 'Anika',
+                lastName: 'Rao',
+                role: 'doctor',
+            }),
+        ]);
     });
 
     it('checks room membership before listing messages', async () => {

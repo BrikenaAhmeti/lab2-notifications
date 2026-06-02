@@ -90,6 +90,7 @@ services:
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASS: ${SMTP_PASS:-}
       SMTP_FROM: ${SMTP_FROM:-notifications@medsphere.local}
+      AUTH_SERVICE_URL: ${AUTH_SERVICE_URL_DOCKER:-http://host.docker.internal:3005}
       CORE_SERVICE_URL: ${CORE_SERVICE_URL_DOCKER:-http://host.docker.internal:3007}
       SWAGGER_ENABLED: ${SWAGGER_ENABLED:-true}
     ports:

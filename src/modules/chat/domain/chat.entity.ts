@@ -26,6 +26,22 @@ export type ChatMessagePreview = {
     createdAt: Date;
 };
 
+export type ChatParticipantProfile = {
+    id: string;
+    userId: string;
+    name?: string | null;
+    firstName?: string | null;
+    lastName?: string | null;
+    email?: string | null;
+    username?: string | null;
+    phone?: string | null;
+    avatarFileId?: string | null;
+    role?: string;
+    roles?: string[];
+};
+
+export type ChatParticipantView = string | ChatParticipantProfile;
+
 export type ChatRoom = {
     id: string;
     participants: string[];
@@ -38,6 +54,10 @@ export type ChatRoom = {
 
 export type ChatRoomSummary = ChatRoom & {
     unreadCount: number;
+};
+
+export type ChatRoomSummaryView = Omit<ChatRoomSummary, 'participants'> & {
+    participants: ChatParticipantView[];
 };
 
 export type ChatMessage = {
@@ -111,6 +131,10 @@ export type PaginatedChatRooms = {
         totalItems: number;
         totalPages: number;
     };
+};
+
+export type PaginatedChatRoomsView = Omit<PaginatedChatRooms, 'data'> & {
+    data: ChatRoomSummaryView[];
 };
 
 export type PaginatedChatMessages = {
