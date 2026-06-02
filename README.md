@@ -1,139 +1,146 @@
 # MedSphere Notification Service
 
-Backend foundation for **MS-14: Notification Service - DB + Socket.IO + Core API**, **MS-52: Chat Backend**, and the **MS-54 admin dashboard activity feed**.
+Notification, realtime, chat, and dashboard activity microservice for Lab2 MedSphere. It owns in-app/email notifications, Socket.IO realtime delivery, chat rooms/messages/read receipts/uploads, dashboard activity ingestion, and appointment reminder jobs.
 
-## What This Service Owns
+## Port
 
-- Dedicated PostgreSQL notifications table
-- Internal notification creation API for other MedSphere services
-- Authenticated user notification API
-- Socket.IO real-time delivery
-- Chat rooms, message history, unread counts, read receipts, and attachment URLs
-- Admin dashboard recent activity feed backed by MongoDB `activity_streams`
-- Optional Redis Socket.IO adapter for multi-instance broadcasting
-- Optional MongoDB bootstrap for `chat_rooms`, `chat_messages`, and `activity_streams`
-- Optional SMTP email delivery for notifications with the `email` channel
-- Swagger/OpenAPI documentation at `/api-docs`
+- Local and Docker API: `http://localhost:3008`
+- Container port: `3008`
+- Health: `GET /health`
+- REST API base paths: `/api/notifications`, `/api/chat`, `/api/dashboard`
+- Socket.IO URL: `http://localhost:3008`
 
-## Stack
+## Data Stores
 
-- Node.js + Express + TypeScript
-- Prisma + PostgreSQL
-- Socket.IO
-- Redis adapter for Socket.IO
-- MongoDB driver
-- Nodemailer
-- Jest
-- Zod validation
+- PostgreSQL via Prisma for notifications.
+- MongoDB for chat rooms, chat messages, and dashboard activity streams.
+- Redis for Socket.IO adapter support in multi-instance deployments.
 
-## Environment
+Docker Compose starts Postgres, Redis, MongoDB, a one-time migration container, and the Notification Service.
 
-Copy `.env.example` to `.env` and adjust values:
+## Environment Keys
 
-```env
-PORT=3005
-NODE_ENV=development
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/medsphere_notifications?schema=public"
-MONGODB_URL="mongodb://localhost:27017/medsphere_notifications"
-REDIS_URL="redis://localhost:6379"
-JWT_ACCESS_SECRET="replace-with-auth-service-access-secret"
-INTERNAL_API_KEY="replace-with-shared-internal-service-key"
-CORS_ORIGIN="http://localhost:5173"
-SMTP_HOST="smtp.example.com"
-SMTP_PORT=587
-SMTP_USER="smtp-user"
-SMTP_PASS="smtp-password"
-SMTP_FROM="notifications@medsphere.local"
-CORE_SERVICE_URL="http://localhost:3007"
-CHAT_UPLOAD_DIR="uploads/chat"
-CHAT_PUBLIC_BASE_URL=""
-APPOINTMENT_REMINDER_JOB_ENABLED=true
-SWAGGER_ENABLED=true
-```
+Copy `.env.example` to `.env`.
 
-`DATABASE_URL`, `JWT_ACCESS_SECRET`, and `INTERNAL_API_KEY` are required. `MONGODB_URL` is required for chat and dashboard activity streams, `REDIS_URL` is only needed for multi-instance Socket.IO broadcasting, SMTP values are only needed for email-channel delivery, and `CORE_SERVICE_URL` is only needed when the appointment reminder job should call the Core Service. This service does not use OpenAI, Whisper, GPT, or an OpenAI API key; those belong to the separate AI Service in the MedSphere architecture.
+Service keys:
 
-## Run Locally
+- `NODE_ENV`
+- `PORT`
+- `JWT_ACCESS_SECRET`
+- `INTERNAL_API_KEY`
+- `CORS_ORIGIN`
+- `SWAGGER_ENABLED`
+- `DATABASE_URL`
+- `REDIS_URL`
+- `MONGODB_URL`
+- `SMTP_HOST`
+- `SMTP_PORT`
+- `SMTP_USER`
+- `SMTP_PASS`
+- `SMTP_FROM`
+- `AUTH_SERVICE_URL`
+- `CORE_SERVICE_URL`
+- `CHAT_UPLOAD_DIR`
+- `CHAT_PUBLIC_BASE_URL`
+- `APPOINTMENT_REMINDER_JOB_ENABLED`
+
+Docker/Postgres/Redis/Mongo helper keys:
+
+- `POSTGRES_USER`
+- `POSTGRES_PASSWORD`
+- `POSTGRES_DB`
+- `POSTGRES_PORT`
+- `REDIS_PASSWORD`
+- `REDIS_PORT`
+- `MONGO_ROOT_USERNAME`
+- `MONGO_ROOT_PASSWORD`
+- `MONGO_DATABASE`
+- `MONGO_PORT`
+- `AUTH_SERVICE_URL_DOCKER`
+- `CORE_SERVICE_URL_DOCKER`
+- `NOTIFICATION_SERVICE_PORT`
+
+## Start Locally
 
 ```bash
 npm install
+cp .env.example .env
+npm run docker:infra
 npm run prisma:generate
 npm run prisma:migrate
+npm run seed
 npm run dev
 ```
 
-Service URLs:
+Stop only local infrastructure:
 
-- Health: `GET http://localhost:3005/health`
-- Swagger UI: `http://localhost:3005/api/docs`
-- Legacy Swagger UI alias: `http://localhost:3005/api-docs`
-- OpenAPI JSON: `GET http://localhost:3005/api/docs.json`
-
-## API Surface
-
-Internal service-to-service endpoint:
-
-- `POST /internal/notifications/send`
-- Header: `x-internal-api-key: <INTERNAL_API_KEY>`
-- Legacy body: `{ userId, type, title, message, link?, channels?, recipientEmail? }`
-- MS-31 typed body: `{ type, recipients, data?, title?, message?, link?, dedupeByTypeAndLink? }`
-
-Typed MS-31 payloads derive recipients and channels from PRD 18.1. Example:
-
-```json
-{
-  "type": "appointment.booked",
-  "recipients": [
-    {
-      "role": "patient",
-      "userId": "55f75ac7-b85d-48a4-adba-df4ba1dcba61",
-      "email": "patient@example.com"
-    },
-    {
-      "role": "staff",
-      "userId": "e54b8b3b-6927-4c67-ad12-61e2e7bf86f0",
-      "email": "doctor@example.com"
-    }
-  ],
-  "data": {
-    "appointmentId": "appointment-id",
-    "serviceName": "Initial Consultation",
-    "departmentName": "Cardiology",
-    "scheduledAt": "2030-01-02T09:00:00.000Z"
-  }
-}
+```bash
+npm run docker:infra:down
 ```
 
-Authenticated user endpoints:
+## Run With Docker
 
-- `GET /api/notifications?isRead=&page=&limit=` - list my notifications; `isRead=false&page=1&limit=1` returns the unread count in `meta.totalItems` and `meta.unreadCount`
+```bash
+cp .env.example .env
+npm run docker:up
+```
+
+Stop the stack:
+
+```bash
+npm run docker:down
+```
+
+Docker starts Postgres, Redis, MongoDB, runs `prisma migrate deploy`, then starts the Notification Service.
+
+## Build And Tests
+
+```bash
+npm run build
+npm run test
+```
+
+Additional commands:
+
+```bash
+npm run test:watch
+npm run prisma:generate
+npm run prisma:migrate
+npm run prisma:migrate:deploy
+npm run prisma:studio
+npm run seed
+```
+
+## Swagger
+
+- Swagger UI: `http://localhost:3008/api/docs`
+- Legacy Swagger UI alias: `http://localhost:3008/api-docs`
+- OpenAPI JSON: `http://localhost:3008/api/docs.json`
+- Legacy OpenAPI JSON alias: `http://localhost:3008/api-docs.json`
+
+Set `SWAGGER_ENABLED` to disable Swagger routes when needed.
+
+Swagger covers health, internal notification sends, user notification inbox operations, internal dashboard activity ingestion, dashboard activity reads, chat rooms, chat messages, read receipts, and chat upload.
+
+## Main Routes
+
+- `POST /internal/notifications/send`
+- `GET /api/notifications`
 - `PUT /api/notifications/:id/read`
 - `PUT /api/notifications/read-all`
 - `DELETE /api/notifications/:id`
+- `POST /internal/dashboard/activity`
+- `GET /api/dashboard/activity`
+- `POST /api/chat/rooms`
+- `GET /api/chat/rooms`
+- `GET /api/chat/rooms/:roomId/messages`
+- `POST /api/chat/rooms/:roomId/messages`
+- `PATCH /api/chat/rooms/:roomId/read`
+- `POST /api/chat/rooms/:roomId/upload`
 
-Dashboard activity endpoints:
+## Socket.IO Events
 
-- `GET /api/dashboard/activity?page=1&limit=20` - returns recent facility activity as `{ id, actionType, description, actorName, entityLabel, entityLink, createdAt }`
-- `POST /internal/dashboard/activity` - internal-only domain event ingress for activity-only events such as `payment.recorded`
-
-Chat endpoints:
-
-- `POST /api/chat/rooms` - create or reuse a direct room
-- `GET /api/chat/rooms?page=&limit=` - list my rooms with unread counts
-- `GET /api/chat/rooms/:roomId/messages?page=&limit=` - message history, newest last
-- `POST /api/chat/rooms/:roomId/messages` - send text, file, or image message
-- `PATCH /api/chat/rooms/:roomId/read` - mark received messages as read
-- `POST /api/chat/rooms/:roomId/upload` - upload an attachment by raw bytes with `x-file-name`, or JSON `{ fileName, mimeType, contentBase64 }`
-
-Socket.IO clients connect with:
-
-```ts
-io('http://localhost:3005', {
-  auth: { token: accessToken },
-});
-```
-
-Events emitted by the service:
+Clients authenticate with an Auth Service JWT. The service emits:
 
 - `notification:new`
 - `notification:read`
@@ -142,8 +149,8 @@ Events emitted by the service:
 - `chat:message`
 - `chat:read`
 
-## Tests
+## Notes
 
-```bash
-npm test
-```
+- `JWT_ACCESS_SECRET` must match the Auth Service access-token secret.
+- `INTERNAL_API_KEY` must match Core/Auth/AI where service-to-service calls are enabled.
+- SMTP keys are only required for email notification delivery.

@@ -92,6 +92,9 @@ services:
       SMTP_FROM: ${SMTP_FROM:-notifications@medsphere.local}
       AUTH_SERVICE_URL: ${AUTH_SERVICE_URL_DOCKER:-http://host.docker.internal:3005}
       CORE_SERVICE_URL: ${CORE_SERVICE_URL_DOCKER:-http://host.docker.internal:3007}
+      CHAT_UPLOAD_DIR: ${CHAT_UPLOAD_DIR:-uploads/chat}
+      CHAT_PUBLIC_BASE_URL: ${CHAT_PUBLIC_BASE_URL:-}
+      APPOINTMENT_REMINDER_JOB_ENABLED: ${APPOINTMENT_REMINDER_JOB_ENABLED:-true}
       SWAGGER_ENABLED: ${SWAGGER_ENABLED:-true}
     ports:
       - "${NOTIFICATION_SERVICE_PORT:-3008}:3008"
