@@ -3,6 +3,11 @@ import { z } from 'zod';
 
 dotenv.config();
 
+const optionalUrl = z.preprocess(
+    (value) => (value === '' ? undefined : value),
+    z.string().url().optional(),
+);
+
 const envSchema = z.object({
     PORT: z.coerce.number().default(3008),
     NODE_ENV: z.string().default('development'),
@@ -17,10 +22,10 @@ const envSchema = z.object({
     SMTP_USER: z.string().optional(),
     SMTP_PASS: z.string().optional(),
     SMTP_FROM: z.string().email().default('notifications@medsphere.local'),
-    AUTH_SERVICE_URL: z.string().url().optional(),
-    CORE_SERVICE_URL: z.string().url().optional(),
+    AUTH_SERVICE_URL: optionalUrl,
+    CORE_SERVICE_URL: optionalUrl,
     CHAT_UPLOAD_DIR: z.string().default('uploads/chat'),
-    CHAT_PUBLIC_BASE_URL: z.string().url().optional(),
+    CHAT_PUBLIC_BASE_URL: optionalUrl,
     APPOINTMENT_REMINDER_JOB_ENABLED: z.coerce.boolean().default(true),
     SWAGGER_ENABLED: z.coerce.boolean().default(true),
 });
