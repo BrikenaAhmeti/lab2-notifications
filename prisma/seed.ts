@@ -180,6 +180,16 @@ const NOTIFICATIONS: DemoNotification[] = [
         channels: ['in_app', 'email'],
         isRead: false,
     },
+    {
+        id: 'a0000000-0000-4000-8000-000000000012',
+        userId: DEMO_USER_IDS.doctor,
+        type: 'appointment.confirmed',
+        title: 'Upcoming appointment',
+        message: 'Maria Novak has a confirmed general consultation on your upcoming schedule.',
+        link: '/doctor',
+        channels: ['in_app'],
+        isRead: false,
+    },
 ];
 
 const ACTIVITY_ITEMS = [
@@ -282,6 +292,25 @@ const ACTIVITY_ITEMS = [
         metadata: {
             patientName: 'Mateo Alvarez',
             doctorName: 'Youssef Benali',
+            source: 'seed',
+        },
+        createdAt: addDays(0),
+    },
+    {
+        id: 'b0000000-0000-4000-8000-000000000007',
+        actionType: 'appointment.confirmed',
+        description: 'Mila Petrova confirmed Maria Novak for an upcoming general consultation with Dr. Anika Rao.',
+        actorName: 'Mila Petrova',
+        actorId: DEMO_USER_IDS.receptionist,
+        entityType: 'appointment',
+        entityId: '20000000-0000-4000-8000-000000000006',
+        entityLabel: 'Maria Novak - General Consultation',
+        entityLink: '/admin/appointments/20000000-0000-4000-8000-000000000006',
+        facilityId: 'medsphere-demo',
+        departmentId: null,
+        metadata: {
+            patientName: 'Maria Novak',
+            doctorName: 'Dr. Anika Rao',
             source: 'seed',
         },
         createdAt: addDays(0),

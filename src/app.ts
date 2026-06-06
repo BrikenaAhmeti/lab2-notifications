@@ -11,12 +11,18 @@ import { internalNotificationRoutes, notificationRoutes } from './modules/notifi
 import { corsOrigin } from './shared/cors-origin';
 import { errorHandler } from './shared/middleware/error-handler';
 import { notFoundHandler } from './shared/middleware/not-found';
+import { createRateLimiter } from './shared/middleware/rate-limit';
 
 export function createApp() {
     const app = express();
 
     app.use(helmet());
     app.use(cors({ origin: corsOrigin, credentials: true }));
+    app.use(createRateLimiter({
+        windowMs: 15 * 60_000,
+        maxRequests: 500,
+        skip: (req) => req.method === 'OPTIONS' || req.path === '/health',
+    }));
     app.use(morgan('dev'));
     app.use(express.json());
 

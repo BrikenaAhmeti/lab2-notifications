@@ -33,5 +33,5 @@ export function corsOrigin(
         return callback(null, true);
     }
 
-    return callback(new Error('CORS policy: origin not allowed'), false);
+    return callback(null, false);
 }
