@@ -81,6 +81,42 @@ describe('chat command handlers', () => {
         });
     });
 
+    it('accepts legacy singular role claims when creating rooms', async () => {
+        const repository = createRepository();
+        const handler = new CreateDirectChatRoomHandler(repository);
+
+        await expect(
+            handler.execute(
+                new CreateDirectChatRoomCommand(
+                    {
+                        id: userId,
+                        role: 'Patient',
+                    },
+                    staffId,
+                    'doctor',
+                ),
+            ),
+        ).resolves.toBe(room);
+    });
+
+    it('normalizes spaced staff role claims before checking room access', async () => {
+        const repository = createRepository();
+        const handler = new CreateDirectChatRoomHandler(repository);
+
+        await expect(
+            handler.execute(
+                new CreateDirectChatRoomCommand(
+                    {
+                        id: userId,
+                        roles: ['Super Admin'],
+                    },
+                    staffId,
+                    'doctor',
+                ),
+            ),
+        ).resolves.toBe(room);
+    });
+
     it('rejects direct rooms created with the same user twice', async () => {
         const repository = createRepository();
         const handler = new CreateDirectChatRoomHandler(repository);
