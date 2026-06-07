@@ -333,6 +333,7 @@ async function seedNotifications() {
 
     for (const notification of NOTIFICATIONS) {
         const channels = notification.channels ?? ['in_app'];
+        const channelRows = channels.map((channel) => ({ channel }));
 
         await prisma.notification.upsert({
             where: { id: notification.id },
@@ -342,13 +343,24 @@ async function seedNotifications() {
                 title: notification.title,
                 message: notification.message,
                 link: notification.link,
-                channels,
+                channels: {
+                    deleteMany: {},
+                    create: channelRows,
+                },
                 isRead: notification.isRead,
                 readAt: notification.isRead ? new Date() : null,
             },
             create: {
-                ...notification,
-                channels,
+                id: notification.id,
+                userId: notification.userId,
+                type: notification.type,
+                title: notification.title,
+                message: notification.message,
+                link: notification.link,
+                channels: {
+                    create: channelRows,
+                },
+                isRead: notification.isRead,
                 readAt: notification.isRead ? new Date() : null,
             },
         });
