@@ -3,6 +3,7 @@ import { Command, CommandHandler } from '../../../shared/core/buses/command-bus'
 import { AppError } from '../../../shared/core/errors/app-error';
 import { AuthenticatedUser } from '../../../shared/core/types/request-with-user';
 import { assertCanCreateDirectRoom } from '../domain/chat-access-policy';
+import { ChatAuditLogger, ChatAuditLogInput } from '../domain/chat-audit.logger';
 import { ChatAttachmentStorage } from '../domain/chat-attachment.storage';
 import {
     ChatAttachment,
@@ -19,6 +20,8 @@ export class CreateDirectChatRoomCommand implements Command {
         public readonly currentUser: AuthenticatedUser,
         public readonly participantId: string,
         public readonly participantRole: ChatParticipantRole,
+        public readonly ipAddress?: string,
+        public readonly userAgent?: string,
     ) {}
 }
 
@@ -29,6 +32,8 @@ export class SendChatMessageCommand implements Command {
         public readonly content: string,
         public readonly type: ChatMessageType,
         public readonly fileUrl: string | null,
+        public readonly ipAddress?: string,
+        public readonly userAgent?: string,
     ) {}
 }
 
@@ -36,6 +41,8 @@ export class MarkChatRoomReadCommand implements Command {
     constructor(
         public readonly roomId: string,
         public readonly userId: string,
+        public readonly ipAddress?: string,
+        public readonly userAgent?: string,
     ) {}
 }
 
@@ -46,13 +53,18 @@ export class StoreChatAttachmentCommand implements Command {
         public readonly fileName: string,
         public readonly mimeType: string | undefined,
         public readonly bytes: Buffer,
+        public readonly ipAddress?: string,
+        public readonly userAgent?: string,
     ) {}
 }
 
 export class CreateDirectChatRoomHandler
     implements CommandHandler<CreateDirectChatRoomCommand, ChatRoom>
 {
-    constructor(private readonly repository: ChatRepository) {}
+    constructor(
+        private readonly repository: ChatRepository,
+        private readonly auditLogger?: ChatAuditLogger,
+    ) {}
 
     async execute(command: CreateDirectChatRoomCommand): Promise<ChatRoom> {
         assertCanCreateDirectRoom({
@@ -61,16 +73,36 @@ export class CreateDirectChatRoomHandler
             participantRole: command.participantRole,
         });
 
-        return this.repository.findOrCreateDirectRoom({
+        const room = await this.repository.findOrCreateDirectRoom({
             participantIds: [command.currentUser.id, command.participantId],
         });
+
+        await recordChatAudit(this.auditLogger, {
+            userId: command.currentUser.id,
+            action: 'chat.room.opened',
+            entity: 'chat_room',
+            entityId: room.id,
+            newValue: {
+                roomId: room.id,
+                participantId: command.participantId,
+                participantRole: command.participantRole,
+                participantIds: room.participants,
+            },
+            ipAddress: command.ipAddress,
+            userAgent: command.userAgent,
+        });
+
+        return room;
     }
 }
 
 export class SendChatMessageHandler
     implements CommandHandler<SendChatMessageCommand, ChatMessage>
 {
-    constructor(private readonly repository: ChatRepository) {}
+    constructor(
+        private readonly repository: ChatRepository,
+        private readonly auditLogger?: ChatAuditLogger,
+    ) {}
 
     async execute(command: SendChatMessageCommand): Promise<ChatMessage> {
         const room = await this.repository.findRoomForUser(command.roomId, command.senderId);
@@ -95,6 +127,24 @@ export class SendChatMessageHandler
             fileUrl: command.fileUrl,
         });
 
+        await recordChatAudit(this.auditLogger, {
+            userId: command.senderId,
+            action: 'chat.message.sent',
+            entity: 'chat_message',
+            entityId: message.id,
+            newValue: {
+                roomId: command.roomId,
+                messageId: message.id,
+                senderId: command.senderId,
+                recipientIds: room.participants.filter((participantId) => participantId !== command.senderId),
+                type: message.type,
+                hasAttachment: Boolean(message.fileUrl),
+                contentLength: message.content.length,
+            },
+            ipAddress: command.ipAddress,
+            userAgent: command.userAgent,
+        });
+
         chatGateway.emitMessage(room.participants, message);
 
         return message;
@@ -104,7 +154,10 @@ export class SendChatMessageHandler
 export class MarkChatRoomReadHandler
     implements CommandHandler<MarkChatRoomReadCommand, MarkChatRoomReadResult>
 {
-    constructor(private readonly repository: ChatRepository) {}
+    constructor(
+        private readonly repository: ChatRepository,
+        private readonly auditLogger?: ChatAuditLogger,
+    ) {}
 
     async execute(command: MarkChatRoomReadCommand): Promise<MarkChatRoomReadResult> {
         const room = await this.repository.findRoomForUser(command.roomId, command.userId);
@@ -125,6 +178,21 @@ export class MarkChatRoomReadHandler
                 readAt: result.readAt,
                 readCount: result.readCount,
             });
+
+            await recordChatAudit(this.auditLogger, {
+                userId: command.userId,
+                action: 'chat.room.read',
+                entity: 'chat_room',
+                entityId: command.roomId,
+                newValue: {
+                    roomId: command.roomId,
+                    userId: command.userId,
+                    readCount: result.readCount,
+                    readAt: result.readAt.toISOString(),
+                },
+                ipAddress: command.ipAddress,
+                userAgent: command.userAgent,
+            });
         }
 
         return result;
@@ -137,6 +205,7 @@ export class StoreChatAttachmentHandler
     constructor(
         private readonly repository: ChatRepository,
         private readonly storage: ChatAttachmentStorage,
+        private readonly auditLogger?: ChatAuditLogger,
     ) {}
 
     async execute(command: StoreChatAttachmentCommand): Promise<ChatAttachment> {
@@ -150,12 +219,47 @@ export class StoreChatAttachmentHandler
             throw new AppError('Attachment content is required', 422);
         }
 
-        return this.storage.store({
+        const attachment = await this.storage.store({
             roomId: command.roomId,
             userId: command.userId,
             fileName: command.fileName,
             mimeType: command.mimeType,
             bytes: command.bytes,
+        });
+
+        await recordChatAudit(this.auditLogger, {
+            userId: command.userId,
+            action: 'chat.attachment.uploaded',
+            entity: 'chat_attachment',
+            entityId: command.roomId,
+            newValue: {
+                roomId: command.roomId,
+                fileName: attachment.fileName,
+                mimeType: attachment.mimeType ?? null,
+                size: attachment.size,
+            },
+            ipAddress: command.ipAddress,
+            userAgent: command.userAgent,
+        });
+
+        return attachment;
+    }
+}
+
+async function recordChatAudit(
+    auditLogger: ChatAuditLogger | undefined,
+    input: ChatAuditLogInput,
+) {
+    if (!auditLogger) {
+        return;
+    }
+
+    try {
+        await auditLogger.record(input);
+    } catch (error) {
+        console.warn('[chat-audit] audit logger failed', {
+            action: input.action,
+            error: error instanceof Error ? error.message : String(error),
         });
     }
 }

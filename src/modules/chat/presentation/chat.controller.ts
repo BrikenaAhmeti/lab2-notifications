@@ -50,7 +50,13 @@ export class ChatController {
             const body = createDirectChatRoomSchema.parse(req.body);
             const room = await this.commandBus.execute(
                 this.handlers.createDirectRoom,
-                new CreateDirectChatRoomCommand(user, body.participantId, body.participantRole),
+                new CreateDirectChatRoomCommand(
+                    user,
+                    body.participantId,
+                    body.participantRole,
+                    req.ip,
+                    req.get('user-agent'),
+                ),
             );
 
             return res.status(201).json({ data: room });
@@ -103,6 +109,8 @@ export class ChatController {
                     body.content,
                     body.type,
                     body.fileUrl ?? null,
+                    req.ip,
+                    req.get('user-agent'),
                 ),
             );
 
@@ -118,7 +126,7 @@ export class ChatController {
             const { roomId } = chatRoomParamsSchema.parse(req.params);
             const result = await this.commandBus.execute(
                 this.handlers.markRead,
-                new MarkChatRoomReadCommand(roomId, user.id),
+                new MarkChatRoomReadCommand(roomId, user.id, req.ip, req.get('user-agent')),
             );
 
             return res.json({ data: result });
@@ -140,6 +148,8 @@ export class ChatController {
                     upload.fileName,
                     upload.mimeType,
                     upload.bytes,
+                    req.ip,
+                    req.get('user-agent'),
                 ),
             );
 
