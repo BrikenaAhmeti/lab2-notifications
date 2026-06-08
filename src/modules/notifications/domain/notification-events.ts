@@ -90,6 +90,17 @@ function idLink(data: NotificationEventData, key: string, path: string) {
     return typeof value === 'string' && value.trim() ? `${path}/${value.trim()}` : null;
 }
 
+function appointmentRoleLink(
+    data: NotificationEventData,
+    role: NotificationRecipientRole,
+) {
+    if (role === 'staff' || role === 'doctor') {
+        return idLink(data, 'appointmentId', '/doctor/consultations') ?? '/doctor';
+    }
+
+    return '/patient/appointments';
+}
+
 function scheduledAt(data: NotificationEventData) {
     const value = text(data, 'scheduledAt', 'the scheduled time');
     const parsed = new Date(value);
@@ -304,7 +315,7 @@ export const notificationEventDefinitions: Record<
         render: (data) => ({
             title: 'New prescription created',
             message: `${text(data, 'doctorName', 'Your doctor')} created a new prescription for you.`,
-            link: idLink(data, 'prescriptionId', '/patient/prescriptions'),
+            link: '/patient/prescriptions',
         }),
     },
     'prescription.ready_for_pickup': {
@@ -314,7 +325,7 @@ export const notificationEventDefinitions: Record<
         render: (data) => ({
             title: 'Prescription ready for pickup',
             message: 'Your prescription is ready for pickup at the pharmacy.',
-            link: idLink(data, 'prescriptionId', '/patient/prescriptions'),
+            link: '/patient/prescriptions',
         }),
     },
     'prescription.medication_out_of_stock': {
@@ -324,7 +335,7 @@ export const notificationEventDefinitions: Record<
         render: (data) => ({
             title: 'Medication out of stock',
             message: `${text(data, 'medicationName', 'A prescribed medication')} is currently out of stock.`,
-            link: idLink(data, 'prescriptionId', '/prescriptions'),
+            link: '/patient/prescriptions',
         }),
     },
     'inventory.low_stock': {
@@ -334,7 +345,7 @@ export const notificationEventDefinitions: Record<
         render: (data) => ({
             title: 'Low stock alert',
             message: `${text(data, 'itemName', 'An inventory item')} is below its reorder level.`,
-            link: idLink(data, 'inventoryItemId', '/admin/inventory/items'),
+            link: '/admin/inventory',
         }),
     },
     'inventory.expiry_warning': {
@@ -344,7 +355,7 @@ export const notificationEventDefinitions: Record<
         render: (data) => ({
             title: 'Inventory expiry warning',
             message: `${text(data, 'itemName', 'An inventory item')} expires on ${text(data, 'expiresAt', 'the configured expiry date')}.`,
-            link: idLink(data, 'inventoryItemId', '/admin/inventory/items'),
+            link: '/admin/inventory',
         }),
     },
     'feedback.created': {
@@ -364,7 +375,7 @@ export const notificationEventDefinitions: Record<
         render: (data) => ({
             title: 'New contact form submission',
             message: `A new contact form submission from ${text(data, 'senderName', 'a website visitor')} needs review.`,
-            link: idLink(data, 'contactMessageId', '/admin/contact'),
+            link: '/admin/contact',
         }),
     },
     'account.verification': {
@@ -414,4 +425,30 @@ export function renderNotificationEvent(
     data: NotificationEventData = {},
 ): RenderedNotificationContent {
     return notificationEventDefinitions[type].render(data);
+}
+
+export function resolveNotificationEventLink(
+    type: NotificationEventType,
+    data: NotificationEventData,
+    recipientRole: NotificationRecipientRole,
+    explicitLink?: string | null,
+) {
+    if (explicitLink !== undefined) {
+        return explicitLink;
+    }
+
+    if (
+        type === 'appointment.booked' ||
+        type === 'appointment.cancelled' ||
+        type === 'appointment.rescheduled' ||
+        type === 'appointment.ai_booked'
+    ) {
+        return appointmentRoleLink(data, recipientRole);
+    }
+
+    if (type === 'prescription.medication_out_of_stock') {
+        return recipientRole === 'doctor' ? '/doctor' : '/patient/prescriptions';
+    }
+
+    return renderNotificationEvent(type, data).link ?? null;
 }

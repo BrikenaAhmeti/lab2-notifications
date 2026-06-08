@@ -168,12 +168,14 @@ function withOverrides(
     data: Record<string, unknown>,
     input: CreateActivityInput,
 ): CreateActivityInput {
+    const entityLink = optionalText(data, ['activityEntityLink']) ?? input.entityLink;
+
     return {
         ...input,
         description: text(data, ['activityDescription'], input.description),
         actorName: text(data, ['activityActorName'], input.actorName),
         entityLabel: text(data, ['activityEntityLabel'], input.entityLabel),
-        entityLink: optionalText(data, ['activityEntityLink']) ?? input.entityLink,
+        entityLink: normalizeActivityLink(entityLink),
         actorId: optionalText(data, ['actorId']),
         entityType: optionalText(data, ['entityType']),
         entityId: optionalText(data, ['entityId']),
@@ -181,6 +183,52 @@ function withOverrides(
         departmentId: optionalText(data, ['departmentId']),
         metadata: data,
     };
+}
+
+function normalizeActivityLink(link?: string | null) {
+    if (!link) return null;
+
+    let pathname = link.split(/[?#]/, 1)[0];
+
+    try {
+        const url = new URL(link, 'https://medsphere.local');
+        if (url.protocol === 'http:' || url.protocol === 'https:') {
+            pathname = url.pathname;
+        }
+    } catch {
+        pathname = link.split(/[?#]/, 1)[0];
+    }
+
+    pathname = pathname.replace(/\/+$/, '') || '/';
+
+    if (
+        pathname === '/appointments' ||
+        pathname.startsWith('/appointments/') ||
+        pathname === '/admin/appointments' ||
+        pathname.startsWith('/admin/appointments/') ||
+        pathname === '/patient/appointments' ||
+        pathname.startsWith('/patient/appointments/')
+    ) {
+        return '/admin/search/appointments';
+    }
+
+    if (pathname === '/lab/orders' || pathname.startsWith('/lab/orders/')) {
+        return '/admin/search/lab-orders';
+    }
+
+    if (pathname === '/admin/inventory/items' || pathname.startsWith('/admin/inventory/items/')) {
+        return '/admin/inventory';
+    }
+
+    if (pathname === '/admin/billing' || pathname.startsWith('/admin/billing/')) {
+        return '/admin/billing';
+    }
+
+    if (pathname === '/prescriptions' || pathname.startsWith('/prescriptions/')) {
+        return '/admin/search/patients';
+    }
+
+    return link;
 }
 
 function patientName(data: Record<string, unknown>) {
