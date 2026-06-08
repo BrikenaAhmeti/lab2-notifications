@@ -2,7 +2,7 @@ import { AppointmentReminderJob } from '../../src/jobs/reminderJob';
 import { NotificationService } from '../../src/modules/notifications/application/notification.service';
 
 describe('AppointmentReminderJob', () => {
-    it('sends 24h and 1h reminders with the correct channels', async () => {
+    it('sends day-of and 2h reminders to patients and doctors with the correct channels', async () => {
         const notificationService = {
             create: jest.fn().mockResolvedValue({}),
         } as unknown as jest.Mocked<NotificationService>;
@@ -18,7 +18,10 @@ describe('AppointmentReminderJob', () => {
                             email: 'patient@medsphere.local',
                             name: 'Ada Lovelace',
                         },
-                        staff: null,
+                        staff: {
+                            userId: 'f1807740-1c7b-4a6d-a757-2913e58ea7ed',
+                            displayName: 'Dr. Rivera',
+                        },
                         service: { name: 'Initial Consultation' },
                         department: { name: 'Cardiology' },
                     },
@@ -37,7 +40,7 @@ describe('AppointmentReminderJob', () => {
         expect(fetcher).toHaveBeenCalledTimes(2);
         expect(notificationService.create).toHaveBeenCalledWith(
             expect.objectContaining({
-                type: 'appointment.reminder.24h',
+                type: 'appointment.reminder.day_of',
                 channels: ['in_app', 'email'],
                 recipientEmail: 'patient@medsphere.local',
                 dedupeByTypeAndLink: true,
@@ -45,7 +48,24 @@ describe('AppointmentReminderJob', () => {
         );
         expect(notificationService.create).toHaveBeenCalledWith(
             expect.objectContaining({
-                type: 'appointment.reminder.1h',
+                type: 'appointment.reminder.2h',
+                channels: ['in_app', 'email'],
+                recipientEmail: 'patient@medsphere.local',
+                dedupeByTypeAndLink: true,
+            }),
+        );
+        expect(notificationService.create).toHaveBeenCalledWith(
+            expect.objectContaining({
+                userId: 'f1807740-1c7b-4a6d-a757-2913e58ea7ed',
+                type: 'appointment.doctor_reminder.day_of',
+                channels: ['in_app'],
+                dedupeByTypeAndLink: true,
+            }),
+        );
+        expect(notificationService.create).toHaveBeenCalledWith(
+            expect.objectContaining({
+                userId: 'f1807740-1c7b-4a6d-a757-2913e58ea7ed',
+                type: 'appointment.doctor_reminder.2h',
                 channels: ['in_app'],
                 dedupeByTypeAndLink: true,
             }),

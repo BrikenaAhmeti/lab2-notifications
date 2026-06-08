@@ -20,6 +20,22 @@ const expectedDefinitions = {
         recipients: ['patient'],
         channels: ['in_app'],
     },
+    'appointment.reminder.day_of': {
+        recipients: ['patient'],
+        channels: ['in_app', 'email'],
+    },
+    'appointment.reminder.2h': {
+        recipients: ['patient'],
+        channels: ['in_app', 'email'],
+    },
+    'appointment.doctor_reminder.day_of': {
+        recipients: ['doctor'],
+        channels: ['in_app'],
+    },
+    'appointment.doctor_reminder.2h': {
+        recipients: ['doctor'],
+        channels: ['in_app'],
+    },
     'appointment.cancelled': {
         recipients: ['patient', 'staff'],
         channels: ['in_app', 'email'],
@@ -32,11 +48,27 @@ const expectedDefinitions = {
         recipients: ['patient'],
         channels: ['in_app', 'email'],
     },
+    'appointment.completed_report': {
+        recipients: ['patient'],
+        channels: ['in_app', 'email'],
+    },
     'lab.results.completed': {
         recipients: ['doctor'],
         channels: ['in_app'],
     },
+    'lab.results.ready': {
+        recipients: ['patient'],
+        channels: ['in_app', 'email'],
+    },
     'lab.results.reviewed': {
+        recipients: ['patient'],
+        channels: ['in_app', 'email'],
+    },
+    'billing.payment_reminder': {
+        recipients: ['patient'],
+        channels: ['in_app', 'email'],
+    },
+    'billing.invoice_paid': {
         recipients: ['patient'],
         channels: ['in_app', 'email'],
     },
