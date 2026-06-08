@@ -8,6 +8,7 @@ import {
     StoreChatAttachmentCommand,
     StoreChatAttachmentHandler,
 } from '../../src/modules/chat/application/chat.commands';
+import { ChatAuditLogger } from '../../src/modules/chat/domain/chat-audit.logger';
 import { ChatAttachmentStorage } from '../../src/modules/chat/domain/chat-attachment.storage';
 import { ChatMessage, ChatRoom } from '../../src/modules/chat/domain/chat.entity';
 import { ChatRepository } from '../../src/modules/chat/domain/chat.repository';
@@ -54,6 +55,12 @@ function createRepository(): jest.Mocked<ChatRepository> {
     };
 }
 
+function createAuditLogger(): jest.Mocked<ChatAuditLogger> {
+    return {
+        record: jest.fn().mockResolvedValue(undefined),
+    };
+}
+
 describe('chat command handlers', () => {
     afterEach(() => {
         jest.restoreAllMocks();
@@ -61,7 +68,8 @@ describe('chat command handlers', () => {
 
     it('creates or reuses a direct room for allowed participants', async () => {
         const repository = createRepository();
-        const handler = new CreateDirectChatRoomHandler(repository);
+        const auditLogger = createAuditLogger();
+        const handler = new CreateDirectChatRoomHandler(repository, auditLogger);
 
         await expect(
             handler.execute(
@@ -72,6 +80,8 @@ describe('chat command handlers', () => {
                     },
                     staffId,
                     'doctor',
+                    '127.0.0.1',
+                    'jest',
                 ),
             ),
         ).resolves.toBe(room);
@@ -79,6 +89,52 @@ describe('chat command handlers', () => {
         expect(repository.findOrCreateDirectRoom).toHaveBeenCalledWith({
             participantIds: [userId, staffId],
         });
+        expect(auditLogger.record).toHaveBeenCalledWith(
+            expect.objectContaining({
+                userId,
+                action: 'chat.room.opened',
+                entity: 'chat_room',
+                entityId: roomId,
+                ipAddress: '127.0.0.1',
+                userAgent: 'jest',
+            }),
+        );
+    });
+
+    it('accepts legacy singular role claims when creating rooms', async () => {
+        const repository = createRepository();
+        const handler = new CreateDirectChatRoomHandler(repository);
+
+        await expect(
+            handler.execute(
+                new CreateDirectChatRoomCommand(
+                    {
+                        id: userId,
+                        role: 'Patient',
+                    },
+                    staffId,
+                    'doctor',
+                ),
+            ),
+        ).resolves.toBe(room);
+    });
+
+    it('normalizes spaced staff role claims before checking room access', async () => {
+        const repository = createRepository();
+        const handler = new CreateDirectChatRoomHandler(repository);
+
+        await expect(
+            handler.execute(
+                new CreateDirectChatRoomCommand(
+                    {
+                        id: userId,
+                        roles: ['Super Admin'],
+                    },
+                    staffId,
+                    'doctor',
+                ),
+            ),
+        ).resolves.toBe(room);
     });
 
     it('rejects direct rooms created with the same user twice', async () => {
@@ -123,11 +179,20 @@ describe('chat command handlers', () => {
     it('sends a message only after verifying room membership', async () => {
         const repository = createRepository();
         const emitMessage = jest.spyOn(chatGateway, 'emitMessage').mockImplementation();
-        const handler = new SendChatMessageHandler(repository);
+        const auditLogger = createAuditLogger();
+        const handler = new SendChatMessageHandler(repository, auditLogger);
 
         await expect(
             handler.execute(
-                new SendChatMessageCommand(roomId, userId, '  Hello doctor  ', 'text', null),
+                new SendChatMessageCommand(
+                    roomId,
+                    userId,
+                    '  Hello doctor  ',
+                    'text',
+                    null,
+                    '127.0.0.1',
+                    'jest',
+                ),
             ),
         ).resolves.toBe(message);
 
@@ -139,6 +204,24 @@ describe('chat command handlers', () => {
             type: 'text',
             fileUrl: null,
         });
+        expect(auditLogger.record).toHaveBeenCalledWith(
+            expect.objectContaining({
+                userId,
+                action: 'chat.message.sent',
+                entity: 'chat_message',
+                entityId: message.id,
+                newValue: expect.objectContaining({
+                    roomId,
+                    messageId: message.id,
+                    recipientIds: [staffId],
+                    type: 'text',
+                    contentLength: message.content.length,
+                }),
+                ipAddress: '127.0.0.1',
+                userAgent: 'jest',
+            }),
+        );
+        expect(JSON.stringify(auditLogger.record.mock.calls[0][0].newValue)).not.toContain('Hello doctor');
         expect(emitMessage).toHaveBeenCalledWith(room.participants, message);
     });
 
@@ -157,9 +240,12 @@ describe('chat command handlers', () => {
     it('marks a room as read and emits read receipts when messages changed', async () => {
         const repository = createRepository();
         const emitRead = jest.spyOn(chatGateway, 'emitRead').mockImplementation();
-        const handler = new MarkChatRoomReadHandler(repository);
+        const auditLogger = createAuditLogger();
+        const handler = new MarkChatRoomReadHandler(repository, auditLogger);
 
-        const result = await handler.execute(new MarkChatRoomReadCommand(roomId, userId));
+        const result = await handler.execute(
+            new MarkChatRoomReadCommand(roomId, userId, '127.0.0.1', 'jest'),
+        );
 
         expect(result.readCount).toBe(2);
         expect(repository.markRoomRead).toHaveBeenCalledWith({ roomId, userId });
@@ -171,10 +257,24 @@ describe('chat command handlers', () => {
                 readCount: 2,
             }),
         );
+        expect(auditLogger.record).toHaveBeenCalledWith(
+            expect.objectContaining({
+                userId,
+                action: 'chat.room.read',
+                entity: 'chat_room',
+                entityId: roomId,
+                newValue: expect.objectContaining({
+                    readCount: 2,
+                }),
+                ipAddress: '127.0.0.1',
+                userAgent: 'jest',
+            }),
+        );
     });
 
     it('stores attachments only for room participants', async () => {
         const repository = createRepository();
+        const auditLogger = createAuditLogger();
         const storage: jest.Mocked<ChatAttachmentStorage> = {
             store: jest.fn().mockResolvedValue({
                 fileName: 'result.pdf',
@@ -183,7 +283,7 @@ describe('chat command handlers', () => {
                 size: 7,
             }),
         };
-        const handler = new StoreChatAttachmentHandler(repository, storage);
+        const handler = new StoreChatAttachmentHandler(repository, storage, auditLogger);
 
         await expect(
             handler.execute(
@@ -193,6 +293,8 @@ describe('chat command handlers', () => {
                     'result.pdf',
                     'application/pdf',
                     Buffer.from('content'),
+                    '127.0.0.1',
+                    'jest',
                 ),
             ),
         ).resolves.toEqual(expect.objectContaining({ fileUrl: '/uploads/chat/result.pdf' }));
@@ -203,6 +305,20 @@ describe('chat command handlers', () => {
                 roomId,
                 userId,
                 fileName: 'result.pdf',
+            }),
+        );
+        expect(auditLogger.record).toHaveBeenCalledWith(
+            expect.objectContaining({
+                userId,
+                action: 'chat.attachment.uploaded',
+                entity: 'chat_attachment',
+                entityId: roomId,
+                newValue: expect.objectContaining({
+                    fileName: 'result.pdf',
+                    size: 7,
+                }),
+                ipAddress: '127.0.0.1',
+                userAgent: 'jest',
             }),
         );
     });

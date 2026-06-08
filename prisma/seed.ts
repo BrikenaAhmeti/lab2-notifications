@@ -180,6 +180,16 @@ const NOTIFICATIONS: DemoNotification[] = [
         channels: ['in_app', 'email'],
         isRead: false,
     },
+    {
+        id: 'a0000000-0000-4000-8000-000000000012',
+        userId: DEMO_USER_IDS.doctor,
+        type: 'appointment.confirmed',
+        title: 'Upcoming appointment',
+        message: 'Maria Novak has a confirmed general consultation on your upcoming schedule.',
+        link: '/doctor',
+        channels: ['in_app'],
+        isRead: false,
+    },
 ];
 
 const ACTIVITY_ITEMS = [
@@ -286,6 +296,25 @@ const ACTIVITY_ITEMS = [
         },
         createdAt: addDays(0),
     },
+    {
+        id: 'b0000000-0000-4000-8000-000000000007',
+        actionType: 'appointment.confirmed',
+        description: 'Mila Petrova confirmed Maria Novak for an upcoming general consultation with Dr. Anika Rao.',
+        actorName: 'Mila Petrova',
+        actorId: DEMO_USER_IDS.receptionist,
+        entityType: 'appointment',
+        entityId: '20000000-0000-4000-8000-000000000006',
+        entityLabel: 'Maria Novak - General Consultation',
+        entityLink: '/admin/appointments/20000000-0000-4000-8000-000000000006',
+        facilityId: 'medsphere-demo',
+        departmentId: null,
+        metadata: {
+            patientName: 'Maria Novak',
+            doctorName: 'Dr. Anika Rao',
+            source: 'seed',
+        },
+        createdAt: addDays(0),
+    },
 ] as const;
 
 function directKey(left: string, right: string) {
@@ -304,6 +333,7 @@ async function seedNotifications() {
 
     for (const notification of NOTIFICATIONS) {
         const channels = notification.channels ?? ['in_app'];
+        const channelRows = channels.map((channel) => ({ channel }));
 
         await prisma.notification.upsert({
             where: { id: notification.id },
@@ -313,13 +343,24 @@ async function seedNotifications() {
                 title: notification.title,
                 message: notification.message,
                 link: notification.link,
-                channels,
+                channels: {
+                    deleteMany: {},
+                    create: channelRows,
+                },
                 isRead: notification.isRead,
                 readAt: notification.isRead ? new Date() : null,
             },
             create: {
-                ...notification,
-                channels,
+                id: notification.id,
+                userId: notification.userId,
+                type: notification.type,
+                title: notification.title,
+                message: notification.message,
+                link: notification.link,
+                channels: {
+                    create: channelRows,
+                },
+                isRead: notification.isRead,
                 readAt: notification.isRead ? new Date() : null,
             },
         });

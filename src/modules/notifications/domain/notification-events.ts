@@ -5,11 +5,19 @@ export const notificationEventTypes = [
     'appointment.confirmed',
     'appointment.reminder.24h',
     'appointment.reminder.1h',
+    'appointment.reminder.day_of',
+    'appointment.reminder.2h',
+    'appointment.doctor_reminder.day_of',
+    'appointment.doctor_reminder.2h',
     'appointment.cancelled',
     'appointment.rescheduled',
     'appointment.no_show',
+    'appointment.completed_report',
     'lab.results.completed',
+    'lab.results.ready',
     'lab.results.reviewed',
+    'billing.payment_reminder',
+    'billing.invoice_paid',
     'prescription.created',
     'prescription.ready_for_pickup',
     'prescription.medication_out_of_stock',
@@ -82,6 +90,17 @@ function idLink(data: NotificationEventData, key: string, path: string) {
     return typeof value === 'string' && value.trim() ? `${path}/${value.trim()}` : null;
 }
 
+function appointmentRoleLink(
+    data: NotificationEventData,
+    role: NotificationRecipientRole,
+) {
+    if (role === 'staff' || role === 'doctor') {
+        return idLink(data, 'appointmentId', '/doctor/consultations') ?? '/doctor';
+    }
+
+    return '/patient/appointments';
+}
+
 function scheduledAt(data: NotificationEventData) {
     const value = text(data, 'scheduledAt', 'the scheduled time');
     const parsed = new Date(value);
@@ -100,6 +119,21 @@ function appointmentDetails(data: NotificationEventData) {
     return `${service} in ${department}`;
 }
 
+function amount(data: NotificationEventData) {
+    const value = data.amountDue ?? data.totalAmount ?? data.amount;
+    const numeric = typeof value === 'number' ? value : Number(value);
+
+    if (!Number.isFinite(numeric)) {
+        return text(data, 'amountDue', 'the outstanding balance');
+    }
+
+    return `EUR ${numeric.toFixed(2)}`;
+}
+
+function dueDate(data: NotificationEventData) {
+    return text(data, 'dueDate', 'the due date');
+}
+
 export const notificationEventDefinitions: Record<
     NotificationEventType,
     NotificationEventDefinition
@@ -111,7 +145,7 @@ export const notificationEventDefinitions: Record<
         render: (data) => ({
             title: 'Appointment booked',
             message: `${appointmentDetails(data)} has been booked for ${scheduledAt(data)}.`,
-            link: idLink(data, 'appointmentId', '/appointments'),
+            link: text(data, 'appointmentLink', '') || '/patient/appointments',
         }),
     },
     'appointment.confirmed': {
@@ -121,7 +155,7 @@ export const notificationEventDefinitions: Record<
         render: (data) => ({
             title: 'Appointment confirmed',
             message: `${appointmentDetails(data)} has been confirmed for ${scheduledAt(data)}.`,
-            link: idLink(data, 'appointmentId', '/patient/appointments'),
+            link: '/patient/appointments',
         }),
     },
     'appointment.reminder.24h': {
@@ -131,7 +165,7 @@ export const notificationEventDefinitions: Record<
         render: (data) => ({
             title: 'Appointment reminder',
             message: `${appointmentDetails(data)} is scheduled for ${scheduledAt(data)}.`,
-            link: idLink(data, 'appointmentId', '/patient/appointments'),
+            link: '/patient/appointments',
         }),
     },
     'appointment.reminder.1h': {
@@ -141,7 +175,47 @@ export const notificationEventDefinitions: Record<
         render: (data) => ({
             title: 'Appointment starts soon',
             message: `${appointmentDetails(data)} starts at ${scheduledAt(data)}.`,
-            link: idLink(data, 'appointmentId', '/patient/appointments'),
+            link: '/patient/appointments',
+        }),
+    },
+    'appointment.reminder.day_of': {
+        label: 'Appointment reminder',
+        channels: ['in_app', 'email'],
+        recipientRoles: ['patient'],
+        render: (data) => ({
+            title: 'Appointment today',
+            message: `${appointmentDetails(data)} is scheduled today for ${scheduledAt(data)}.`,
+            link: '/patient/appointments',
+        }),
+    },
+    'appointment.reminder.2h': {
+        label: 'Appointment starts soon',
+        channels: ['in_app', 'email'],
+        recipientRoles: ['patient'],
+        render: (data) => ({
+            title: 'Appointment starts in 2 hours',
+            message: `${appointmentDetails(data)} starts at ${scheduledAt(data)}.`,
+            link: '/patient/appointments',
+        }),
+    },
+    'appointment.doctor_reminder.day_of': {
+        label: 'Doctor appointment reminder',
+        channels: ['in_app'],
+        recipientRoles: ['doctor'],
+        render: (data) => ({
+            title: 'Appointment today',
+            message: `${appointmentDetails(data)} with ${text(data, 'patientName', 'a patient')} is scheduled today for ${scheduledAt(data)}.`,
+            link: idLink(data, 'appointmentId', '/doctor/consultations'),
+        }),
+    },
+    'appointment.doctor_reminder.2h': {
+        label: 'Doctor appointment reminder',
+        channels: ['in_app'],
+        recipientRoles: ['doctor'],
+        render: (data) => ({
+            title: 'Appointment starts in 2 hours',
+            message: `${appointmentDetails(data)} with ${text(data, 'patientName', 'a patient')} starts at ${scheduledAt(data)}.`,
+            link: idLink(data, 'appointmentId', '/doctor/consultations'),
         }),
     },
     'appointment.cancelled': {
@@ -151,7 +225,7 @@ export const notificationEventDefinitions: Record<
         render: (data) => ({
             title: 'Appointment cancelled',
             message: `${appointmentDetails(data)} scheduled for ${scheduledAt(data)} was cancelled.`,
-            link: idLink(data, 'appointmentId', '/appointments'),
+            link: text(data, 'appointmentLink', '') || '/patient/appointments',
         }),
     },
     'appointment.rescheduled': {
@@ -161,7 +235,7 @@ export const notificationEventDefinitions: Record<
         render: (data) => ({
             title: 'Appointment rescheduled',
             message: `${appointmentDetails(data)} was rescheduled to ${scheduledAt(data)}.`,
-            link: idLink(data, 'appointmentId', '/appointments'),
+            link: text(data, 'appointmentLink', '') || '/patient/appointments',
         }),
     },
     'appointment.no_show': {
@@ -171,7 +245,17 @@ export const notificationEventDefinitions: Record<
         render: (data) => ({
             title: 'No-show recorded',
             message: `A no-show was recorded for ${appointmentDetails(data)} scheduled for ${scheduledAt(data)}.`,
-            link: idLink(data, 'appointmentId', '/patient/appointments'),
+            link: '/patient/appointments',
+        }),
+    },
+    'appointment.completed_report': {
+        label: 'Consultation report ready',
+        channels: ['in_app', 'email'],
+        recipientRoles: ['patient'],
+        render: (data) => ({
+            title: 'Consultation report ready',
+            message: `Your consultation report for ${appointmentDetails(data)} is ready to view in your portal.`,
+            link: text(data, 'reportLink', '') || '/patient/medical-records',
         }),
     },
     'lab.results.completed': {
@@ -180,8 +264,18 @@ export const notificationEventDefinitions: Record<
         recipientRoles: ['doctor'],
         render: (data) => ({
             title: 'Lab results ready for review',
-            message: `Lab results for ${text(data, 'patientName', 'your patient')} are complete and ready for review.`,
-            link: idLink(data, 'labOrderId', '/doctor/lab-orders'),
+            message: `Lab results for ${text(data, 'patientName', 'your patient')} are complete and ready for review: ${text(data, 'testNames', 'lab tests')}.`,
+            link: idLink(data, 'labOrderId', '/doctor/lab-reviews'),
+        }),
+    },
+    'lab.results.ready': {
+        label: 'Lab results ready',
+        channels: ['in_app', 'email'],
+        recipientRoles: ['patient'],
+        render: (data) => ({
+            title: 'Lab results ready',
+            message: `Your lab results are ready to view: ${text(data, 'testNames', 'lab tests')}.`,
+            link: '/patient/lab-results',
         }),
     },
     'lab.results.reviewed': {
@@ -191,7 +285,27 @@ export const notificationEventDefinitions: Record<
         render: (data) => ({
             title: 'Lab results ready',
             message: 'Your reviewed lab results are ready to view in your portal.',
-            link: idLink(data, 'labOrderId', '/patient/lab-results'),
+            link: '/patient/lab-results',
+        }),
+    },
+    'billing.payment_reminder': {
+        label: 'Billing payment reminder',
+        channels: ['in_app', 'email'],
+        recipientRoles: ['patient'],
+        render: (data) => ({
+            title: 'Billing reminder',
+            message: `Payment reminder for invoice ${text(data, 'billingNumber', 'your invoice')}: ${amount(data)} is due by ${dueDate(data)}.`,
+            link: '/patient/billing',
+        }),
+    },
+    'billing.invoice_paid': {
+        label: 'Paid invoice',
+        channels: ['in_app', 'email'],
+        recipientRoles: ['patient'],
+        render: (data) => ({
+            title: 'Invoice paid',
+            message: `Invoice ${text(data, 'billingNumber', 'your invoice')} has been marked as paid. Your invoice is available in your portal.`,
+            link: '/patient/billing',
         }),
     },
     'prescription.created': {
@@ -201,7 +315,7 @@ export const notificationEventDefinitions: Record<
         render: (data) => ({
             title: 'New prescription created',
             message: `${text(data, 'doctorName', 'Your doctor')} created a new prescription for you.`,
-            link: idLink(data, 'prescriptionId', '/patient/prescriptions'),
+            link: '/patient/prescriptions',
         }),
     },
     'prescription.ready_for_pickup': {
@@ -211,7 +325,7 @@ export const notificationEventDefinitions: Record<
         render: (data) => ({
             title: 'Prescription ready for pickup',
             message: 'Your prescription is ready for pickup at the pharmacy.',
-            link: idLink(data, 'prescriptionId', '/patient/prescriptions'),
+            link: '/patient/prescriptions',
         }),
     },
     'prescription.medication_out_of_stock': {
@@ -221,7 +335,7 @@ export const notificationEventDefinitions: Record<
         render: (data) => ({
             title: 'Medication out of stock',
             message: `${text(data, 'medicationName', 'A prescribed medication')} is currently out of stock.`,
-            link: idLink(data, 'prescriptionId', '/prescriptions'),
+            link: '/patient/prescriptions',
         }),
     },
     'inventory.low_stock': {
@@ -231,7 +345,7 @@ export const notificationEventDefinitions: Record<
         render: (data) => ({
             title: 'Low stock alert',
             message: `${text(data, 'itemName', 'An inventory item')} is below its reorder level.`,
-            link: idLink(data, 'inventoryItemId', '/admin/inventory/items'),
+            link: '/admin/inventory',
         }),
     },
     'inventory.expiry_warning': {
@@ -241,7 +355,7 @@ export const notificationEventDefinitions: Record<
         render: (data) => ({
             title: 'Inventory expiry warning',
             message: `${text(data, 'itemName', 'An inventory item')} expires on ${text(data, 'expiresAt', 'the configured expiry date')}.`,
-            link: idLink(data, 'inventoryItemId', '/admin/inventory/items'),
+            link: '/admin/inventory',
         }),
     },
     'feedback.created': {
@@ -261,7 +375,7 @@ export const notificationEventDefinitions: Record<
         render: (data) => ({
             title: 'New contact form submission',
             message: `A new contact form submission from ${text(data, 'senderName', 'a website visitor')} needs review.`,
-            link: idLink(data, 'contactMessageId', '/admin/contact'),
+            link: '/admin/contact',
         }),
     },
     'account.verification': {
@@ -311,4 +425,30 @@ export function renderNotificationEvent(
     data: NotificationEventData = {},
 ): RenderedNotificationContent {
     return notificationEventDefinitions[type].render(data);
+}
+
+export function resolveNotificationEventLink(
+    type: NotificationEventType,
+    data: NotificationEventData,
+    recipientRole: NotificationRecipientRole,
+    explicitLink?: string | null,
+) {
+    if (explicitLink !== undefined) {
+        return explicitLink;
+    }
+
+    if (
+        type === 'appointment.booked' ||
+        type === 'appointment.cancelled' ||
+        type === 'appointment.rescheduled' ||
+        type === 'appointment.ai_booked'
+    ) {
+        return appointmentRoleLink(data, recipientRole);
+    }
+
+    if (type === 'prescription.medication_out_of_stock') {
+        return recipientRole === 'doctor' ? '/doctor' : '/patient/prescriptions';
+    }
+
+    return renderNotificationEvent(type, data).link ?? null;
 }

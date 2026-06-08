@@ -61,5 +61,9 @@ export function assertCanCreateDirectRoom(input: DirectRoomAccessInput) {
 }
 
 function normalizeClaims(values?: string[]) {
-    return new Set((values ?? []).map((value) => value.trim().toLowerCase()).filter(Boolean));
+    return new Set(
+        (values ?? [])
+            .map((value) => value.trim().toLowerCase().replace(/[\s-]+/g, '_'))
+            .filter(Boolean),
+    );
 }

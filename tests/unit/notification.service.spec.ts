@@ -165,7 +165,7 @@ describe('NotificationService', () => {
             expect.objectContaining({
                 userId: '55f75ac7-b85d-48a4-adba-df4ba1dcba61',
                 type: 'appointment.booked',
-                link: '/patient/appointments/a1',
+                link: '/patient/appointments',
                 channels: ['in_app', 'email'],
             }),
         );
@@ -173,7 +173,7 @@ describe('NotificationService', () => {
             expect.objectContaining({
                 userId: 'e54b8b3b-6927-4c67-ad12-61e2e7bf86f0',
                 type: 'appointment.booked',
-                link: '/doctor/appointments/a1',
+                link: '/doctor/consultations/a1',
                 channels: ['in_app', 'email'],
             }),
         );
@@ -219,8 +219,27 @@ describe('NotificationService', () => {
                 patientName: 'Ada Lovelace',
             }),
             fallbackDescription: 'Initial Consultation in your department has been booked for 2030-01-02 09:00 UTC.',
-            fallbackEntityLink: '/appointments/a1',
+            fallbackEntityLink: '/patient/appointments',
         });
+    });
+
+    it('normalizes absolute public in-app links to dashboard routes', async () => {
+        const { repository, service } = createFixture();
+        jest.spyOn(notificationGateway, 'emitNew').mockImplementation();
+
+        await service.create({
+            userId: notification.userId,
+            type: 'lab.results.ready',
+            title: 'Lab results ready',
+            message: 'Your lab results are ready.',
+            link: 'https://medsphere.vercel.app/',
+        });
+
+        expect(repository.create).toHaveBeenCalledWith(
+            expect.objectContaining({
+                link: '/patient/lab-results',
+            }),
+        );
     });
 
     it('sends typed email-only account notifications without creating in-app records', async () => {

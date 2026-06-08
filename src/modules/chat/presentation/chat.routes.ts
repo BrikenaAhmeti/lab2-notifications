@@ -16,23 +16,25 @@ import {
     ListChatRoomsHandler,
 } from '../application/chat.queries';
 import { LocalChatAttachmentStorage } from '../infrastructure/local-chat-attachment.storage';
+import { AuthAuditLogClient } from '../infrastructure/auth-audit-log.client';
 import { AuthUserDirectoryClient } from '../infrastructure/auth-user-directory.client';
 import { MongoChatRepository } from '../infrastructure/mongo-chat.repository';
 import { ChatController } from './chat.controller';
 
 const repository = new MongoChatRepository(getMongoDb);
 const participantDirectory = new AuthUserDirectoryClient();
+const auditLogger = new AuthAuditLogClient();
 const attachmentStorage = new LocalChatAttachmentStorage(
     env.chat.uploadDir,
     env.chat.publicBaseUrl,
 );
 const handlers = {
-    createDirectRoom: new CreateDirectChatRoomHandler(repository),
+    createDirectRoom: new CreateDirectChatRoomHandler(repository, auditLogger),
     listRooms: new ListChatRoomsHandler(repository, participantDirectory),
     listMessages: new ListChatMessagesHandler(repository),
-    sendMessage: new SendChatMessageHandler(repository),
-    markRead: new MarkChatRoomReadHandler(repository),
-    storeAttachment: new StoreChatAttachmentHandler(repository, attachmentStorage),
+    sendMessage: new SendChatMessageHandler(repository, auditLogger),
+    markRead: new MarkChatRoomReadHandler(repository, auditLogger),
+    storeAttachment: new StoreChatAttachmentHandler(repository, attachmentStorage, auditLogger),
 };
 const controller = new ChatController(new CommandBus(), new QueryBus(), handlers);
 

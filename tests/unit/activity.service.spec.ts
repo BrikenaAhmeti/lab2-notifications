@@ -8,7 +8,7 @@ const activity = {
     description: 'Lab results were entered for Ada Lovelace.',
     actorName: 'Lab Tech',
     entityLabel: 'Lab order lab-1',
-    entityLink: '/lab/orders/lab-1',
+    entityLink: '/admin/search/lab-orders',
     createdAt: new Date('2026-05-27T11:00:00.000Z'),
 };
 
@@ -64,7 +64,7 @@ describe('ActivityService', () => {
             actionType: 'lab.results.completed',
             description: 'Lab Tech entered lab results for Ada Lovelace.',
             entityLabel: 'Lab order lab-1',
-            entityLink: '/lab/orders/lab-1',
+            entityLink: '/admin/search/lab-orders',
         }));
     });
 

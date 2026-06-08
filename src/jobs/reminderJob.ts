@@ -1,7 +1,7 @@
 import { env } from '../config/env';
 import { NotificationService } from '../modules/notifications/application/notification.service';
 
-type ReminderWindow = '24h' | '1h';
+type ReminderWindow = 'day_of' | '2h';
 
 type ReminderAppointment = {
     id: string;
@@ -12,6 +12,7 @@ type ReminderAppointment = {
         name: string;
     };
     staff: {
+        userId: string | null;
         displayName: string;
     } | null;
     service: {
@@ -37,6 +38,14 @@ function formatDateTime(value: string) {
     return `${new Date(value).toISOString().slice(0, 16).replace('T', ' ')} UTC`;
 }
 
+function startOfUtcDay(date: Date) {
+    return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+}
+
+function endOfUtcDay(date: Date) {
+    return addMs(startOfUtcDay(date), 24 * 60 * 60 * 1000);
+}
+
 export class AppointmentReminderJob {
     constructor(
         private readonly notificationService: NotificationService,
@@ -51,15 +60,14 @@ export class AppointmentReminderJob {
         }
 
         await Promise.all([
-            this.sendWindow('24h', now),
-            this.sendWindow('1h', now),
+            this.sendWindow('day_of', now),
+            this.sendWindow('2h', now),
         ]);
     }
 
     private async sendWindow(window: ReminderWindow, now: Date) {
-        const offsetMs = window === '24h' ? 24 * 60 * 60 * 1000 : 60 * 60 * 1000;
-        const from = addMs(now, offsetMs);
-        const to = addMs(from, LOOKAHEAD_MS);
+        const from = window === 'day_of' ? now : addMs(now, 2 * 60 * 60 * 1000);
+        const to = window === 'day_of' ? endOfUtcDay(now) : addMs(from, LOOKAHEAD_MS);
         const appointments = await this.fetchAppointments(from, to);
 
         await Promise.all(
@@ -87,25 +95,49 @@ export class AppointmentReminderJob {
     }
 
     private async sendReminder(window: ReminderWindow, appointment: ReminderAppointment) {
-        if (!appointment.patient.userId) {
-            return;
-        }
+        await Promise.all([
+            this.sendPatientReminder(window, appointment),
+            this.sendDoctorReminder(window, appointment),
+        ]);
+    }
 
-        const is24h = window === '24h';
-        const title = is24h
-            ? 'Appointment reminder'
-            : 'Appointment starts soon';
+    private async sendPatientReminder(window: ReminderWindow, appointment: ReminderAppointment) {
+        if (!appointment.patient.userId) return;
+
+        const isTwoHour = window === '2h';
+        const title = isTwoHour ? 'Appointment starts in 2 hours' : 'Appointment today';
 
         await this.notificationService.create({
             userId: appointment.patient.userId,
-            type: is24h ? 'appointment.reminder.24h' : 'appointment.reminder.1h',
+            type: isTwoHour ? 'appointment.reminder.2h' : 'appointment.reminder.day_of',
             title,
             message: `${appointment.service.name} in ${appointment.department.name} is scheduled for ${formatDateTime(
                 appointment.scheduledAt,
             )}.`,
-            link: `/patient/appointments/${appointment.id}`,
-            channels: is24h ? ['in_app', 'email'] : ['in_app'],
+            link: '/patient/appointments',
+            channels: ['in_app', 'email'],
             recipientEmail: appointment.patient.email ?? undefined,
+            dedupeByTypeAndLink: true,
+        });
+    }
+
+    private async sendDoctorReminder(window: ReminderWindow, appointment: ReminderAppointment) {
+        if (!appointment.staff?.userId) return;
+
+        const isTwoHour = window === '2h';
+        const title = isTwoHour ? 'Appointment starts in 2 hours' : 'Appointment today';
+
+        await this.notificationService.create({
+            userId: appointment.staff.userId,
+            type: isTwoHour
+                ? 'appointment.doctor_reminder.2h'
+                : 'appointment.doctor_reminder.day_of',
+            title,
+            message: `${appointment.service.name} with ${appointment.patient.name} is scheduled for ${formatDateTime(
+                appointment.scheduledAt,
+            )}.`,
+            link: `/doctor/consultations/${appointment.id}`,
+            channels: ['in_app'],
             dedupeByTypeAndLink: true,
         });
     }

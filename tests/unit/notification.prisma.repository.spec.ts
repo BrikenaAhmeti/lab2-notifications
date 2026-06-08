@@ -10,7 +10,7 @@ const notificationRecord = {
     title: 'Appointment booked',
     message: 'Your appointment was booked.',
     link: '/patient/appointments/1',
-    channels: ['in_app'],
+    channels: [{ channel: 'in_app' }],
     isRead: false,
     readAt: null,
     createdAt: new Date('2026-05-15T10:00:00.000Z'),
@@ -49,6 +49,13 @@ describe('PrismaNotificationRepository', () => {
             orderBy: { createdAt: 'desc' },
             skip: 0,
             take: 20,
+            include: {
+                channels: {
+                    select: {
+                        channel: true,
+                    },
+                },
+            },
         });
         expect(count).toHaveBeenNthCalledWith(1, { where: { userId } });
         expect(count).toHaveBeenNthCalledWith(2, { where: { userId, isRead: false } });

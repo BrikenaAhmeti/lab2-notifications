@@ -8,17 +8,36 @@ Notification, realtime, chat, and dashboard activity microservice for Lab2 MedSp
 - Container port: `3008`
 - Health: `GET /health`
 - REST API base paths: `/api/notifications`, `/api/chat`, `/api/dashboard`
+- Internal API base paths: `/internal/notifications`, `/internal/dashboard`
+- Chat upload static path: `/uploads/chat`
 - Socket.IO URL: `http://localhost:3008`
+- Swagger UI: `http://localhost:3008/api/docs`
+- Legacy Swagger UI alias: `http://localhost:3008/api-docs`
+- OpenAPI JSON: `http://localhost:3008/api/docs.json`
+- Legacy OpenAPI JSON alias: `http://localhost:3008/api-docs.json`
+
+Set `SWAGGER_ENABLED=false` to disable Swagger routes.
 
 ## Data Stores
 
-- PostgreSQL via Prisma for notifications.
+- PostgreSQL via Prisma for notification inbox records and channel deliveries.
 - MongoDB for chat rooms, chat messages, and dashboard activity streams.
-- Redis for Socket.IO adapter support in multi-instance deployments.
+- Redis for the Socket.IO adapter in multi-instance deployments.
 
-Docker Compose starts Postgres, Redis, MongoDB, a one-time migration container, and the Notification Service.
+Docker Compose starts Postgres, Redis, MongoDB, a one-time Prisma migration container, and the Notification Service.
 
-## Environment Keys
+Owned PostgreSQL tables:
+
+- `notifications`
+- `notification_channels`
+
+Owned MongoDB collections:
+
+- `chat_rooms`
+- `chat_messages`
+- `activity_streams`
+
+## Environment
 
 Copy `.env.example` to `.env`.
 
@@ -44,7 +63,7 @@ Service keys:
 - `CHAT_PUBLIC_BASE_URL`
 - `APPOINTMENT_REMINDER_JOB_ENABLED`
 
-Docker/Postgres/Redis/Mongo helper keys:
+Docker and datastore helper keys:
 
 - `POSTGRES_USER`
 - `POSTGRES_PASSWORD`
@@ -59,6 +78,8 @@ Docker/Postgres/Redis/Mongo helper keys:
 - `AUTH_SERVICE_URL_DOCKER`
 - `CORE_SERVICE_URL_DOCKER`
 - `NOTIFICATION_SERVICE_PORT`
+
+`JWT_ACCESS_SECRET` must match the Auth Service access-token secret. `INTERNAL_API_KEY` must match Core/Auth/AI for service-to-service routes.
 
 ## Start Locally
 
@@ -111,32 +132,31 @@ npm run prisma:studio
 npm run seed
 ```
 
-## Swagger
-
-- Swagger UI: `http://localhost:3008/api/docs`
-- Legacy Swagger UI alias: `http://localhost:3008/api-docs`
-- OpenAPI JSON: `http://localhost:3008/api/docs.json`
-- Legacy OpenAPI JSON alias: `http://localhost:3008/api-docs.json`
-
-Set `SWAGGER_ENABLED` to disable Swagger routes when needed.
-
-Swagger covers health, internal notification sends, user notification inbox operations, internal dashboard activity ingestion, dashboard activity reads, chat rooms, chat messages, read receipts, and chat upload.
-
 ## Main Routes
+
+Notifications:
 
 - `POST /internal/notifications/send`
 - `GET /api/notifications`
-- `PUT /api/notifications/:id/read`
 - `PUT /api/notifications/read-all`
+- `PUT /api/notifications/:id/read`
 - `DELETE /api/notifications/:id`
+
+Dashboard activity:
+
 - `POST /internal/dashboard/activity`
 - `GET /api/dashboard/activity`
+
+Chat:
+
 - `POST /api/chat/rooms`
 - `GET /api/chat/rooms`
 - `GET /api/chat/rooms/:roomId/messages`
 - `POST /api/chat/rooms/:roomId/messages`
 - `PATCH /api/chat/rooms/:roomId/read`
 - `POST /api/chat/rooms/:roomId/upload`
+
+Swagger is the source of truth for request and response shapes.
 
 ## Socket.IO Events
 
@@ -149,8 +169,31 @@ Clients authenticate with an Auth Service JWT. The service emits:
 - `chat:message`
 - `chat:read`
 
+Redis adapter support is enabled when Redis is configured.
+
+## Integrations
+
+- Core sends appointment, billing, lab, pharmacy, inventory, feedback, and contact notifications through internal routes.
+- Auth verifies JWTs and provides user profile labels for chat participants.
+- Email delivery uses SMTP settings when email notifications are requested.
+- Appointment reminder jobs query Core when `APPOINTMENT_REMINDER_JOB_ENABLED=true`.
+
+## Database Normalization
+
+The Prisma schema is normalized to 3NF for notification inbox data:
+
+- `Notification` stores the notification header/body and user delivery state.
+- `NotificationChannelDelivery` stores one row per channel with a composite key, avoiding repeated channel columns on the notification row.
+
+MongoDB is used for chat and activity document streams:
+
+- `chat_rooms` stores room membership and a last-message preview for inbox performance.
+- `chat_messages` stores the source messages and read state.
+- `activity_streams` stores append-only activity events for dashboards.
+
+The `lastMessage` field on chat rooms is an intentional read-model snapshot; `chat_messages` remains the source for message history.
+
 ## Notes
 
-- `JWT_ACCESS_SECRET` must match the Auth Service access-token secret.
-- `INTERNAL_API_KEY` must match Core/Auth/AI where service-to-service calls are enabled.
 - SMTP keys are only required for email notification delivery.
+- Chat uploads are stored under `CHAT_UPLOAD_DIR` and exposed through `/uploads/chat`.

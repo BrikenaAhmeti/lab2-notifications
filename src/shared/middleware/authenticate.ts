@@ -10,6 +10,7 @@ type JwtPayload = {
     userId?: string;
     id?: string;
     email?: string;
+    role?: string;
     roles?: string[];
     permissions?: string[];
 };
@@ -39,7 +40,8 @@ export function authenticate(req: Request, _res: Response, next: NextFunction) {
         req.user = {
             id: userId,
             email: payload.email,
-            roles: payload.roles,
+            role: payload.role,
+            roles: normalizeRoles(payload.roles, payload.role),
             permissions: payload.permissions,
         };
 
@@ -47,4 +49,8 @@ export function authenticate(req: Request, _res: Response, next: NextFunction) {
     } catch {
         return next(new AppError('Invalid or expired token', 401));
     }
+}
+
+function normalizeRoles(roles?: string[], role?: string) {
+    return [...new Set([...(roles ?? []), role].filter((value): value is string => Boolean(value)))];
 }

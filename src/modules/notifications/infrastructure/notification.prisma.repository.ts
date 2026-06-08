@@ -1,15 +1,42 @@
-import { PrismaClient } from '../../../generated/prisma';
+import { Prisma, PrismaClient } from '../../../generated/prisma';
 import { AppError } from '../../../shared/core/errors/app-error';
 import {
     ListNotificationsInput,
     Notification,
     NotificationChannel,
+    notificationChannels,
     PaginatedNotifications,
     PersistNotificationInput,
 } from '../domain/notification.entity';
 import { NotificationRepository } from '../domain/notification.repository';
 
-type PrismaNotification = Awaited<ReturnType<PrismaClient['notification']['create']>>;
+const notificationInclude = {
+    channels: {
+        select: {
+            channel: true,
+        },
+    },
+} satisfies Prisma.NotificationInclude;
+
+type PrismaNotification = Prisma.NotificationGetPayload<{
+    include: typeof notificationInclude;
+}>;
+
+const channelOrder = new Map(
+    notificationChannels.map((channel, index) => [channel, index]),
+);
+
+function toChannelRows(channels: NotificationChannel[]) {
+    return channels.map((channel) => ({ channel }));
+}
+
+function sortChannels(channels: NotificationChannel[]) {
+    return channels.sort(
+        (left, right) =>
+            (channelOrder.get(left) ?? Number.MAX_SAFE_INTEGER) -
+            (channelOrder.get(right) ?? Number.MAX_SAFE_INTEGER),
+    );
+}
 
 export class PrismaNotificationRepository implements NotificationRepository {
     constructor(private readonly prisma: PrismaClient) {}
@@ -22,8 +49,11 @@ export class PrismaNotificationRepository implements NotificationRepository {
                 title: input.title,
                 message: input.message,
                 link: input.link,
-                channels: input.channels,
+                channels: {
+                    create: toChannelRows(input.channels),
+                },
             },
+            include: notificationInclude,
         });
 
         return this.toEntity(notification);
@@ -41,6 +71,7 @@ export class PrismaNotificationRepository implements NotificationRepository {
                 link,
             },
             orderBy: { createdAt: 'desc' },
+            include: notificationInclude,
         });
 
         return notification ? this.toEntity(notification) : null;
@@ -65,6 +96,7 @@ export class PrismaNotificationRepository implements NotificationRepository {
                 orderBy: { createdAt: 'desc' },
                 skip: (input.page - 1) * input.limit,
                 take: input.limit,
+                include: notificationInclude,
             }),
             totalItemsPromise,
             unreadCountPromise,
@@ -85,6 +117,7 @@ export class PrismaNotificationRepository implements NotificationRepository {
     async findForUser(id: string, userId: string): Promise<Notification | null> {
         const notification = await this.prisma.notification.findFirst({
             where: { id, userId },
+            include: notificationInclude,
         });
 
         return notification ? this.toEntity(notification) : null;
@@ -103,6 +136,7 @@ export class PrismaNotificationRepository implements NotificationRepository {
                 isRead: true,
                 readAt: notification.readAt ?? new Date(),
             },
+            include: notificationInclude,
         });
 
         return this.toEntity(updated);
@@ -135,7 +169,11 @@ export class PrismaNotificationRepository implements NotificationRepository {
             title: notification.title,
             message: notification.message,
             link: notification.link,
-            channels: notification.channels as NotificationChannel[],
+            channels: sortChannels(
+                notification.channels.map(
+                    ({ channel }) => channel as NotificationChannel,
+                ),
+            ),
             isRead: notification.isRead,
             readAt: notification.readAt,
             createdAt: notification.createdAt,

@@ -20,7 +20,7 @@ describe('activity event projector', () => {
             description: 'Rita Receptionist recorded a 75.50 EUR payment for Ada Lovelace.',
             actorName: 'Rita Receptionist',
             entityLabel: 'INV-1001',
-            entityLink: '/admin/billing/billing-1',
+            entityLink: '/admin/billing',
             createdAt: new Date('2026-05-27T09:30:00.000Z'),
         }));
     });
@@ -44,7 +44,7 @@ describe('activity event projector', () => {
             description: 'Grace Hopper checked in for Cardiology.',
             actorName: 'Nora Nurse',
             entityLabel: 'Cardiology visit',
-            entityLink: '/admin/appointments/appointment-1',
+            entityLink: '/admin/search/appointments',
         }));
     });
 
