@@ -4,6 +4,7 @@ import {
     ListChatRoomsHandler,
     ListChatRoomsQuery,
 } from '../../src/modules/chat/application/chat.queries';
+import { AuthUserDirectoryClient } from '../../src/modules/chat/infrastructure/auth-user-directory.client';
 import { ChatParticipantDirectory } from '../../src/modules/chat/domain/chat-participant-directory';
 import { ChatRepository } from '../../src/modules/chat/domain/chat.repository';
 
@@ -129,5 +130,69 @@ describe('chat query handlers', () => {
             handler.execute(new ListChatMessagesQuery(roomId, userId, 1, 20)),
         ).rejects.toThrow('Chat room not found');
         expect(repository.listMessages).not.toHaveBeenCalled();
+    });
+});
+
+describe('AuthUserDirectoryClient', () => {
+    const originalFetch = global.fetch;
+
+    afterEach(() => {
+        global.fetch = originalFetch;
+        jest.restoreAllMocks();
+    });
+
+    it('uses core staff names when enriching chat participants', async () => {
+        const staffUserId = 'e54b8b3b-6927-4c67-ad12-61e2e7bf86f0';
+        global.fetch = jest
+            .fn()
+            .mockResolvedValueOnce({
+                ok: true,
+                json: async () => ({
+                    data: [
+                        {
+                            id: staffUserId,
+                            userId: staffUserId,
+                            email: 'elizabeta@medsphere.local',
+                            role: 'doctor',
+                        },
+                    ],
+                }),
+            } as Response)
+            .mockResolvedValueOnce({
+                ok: true,
+                json: async () => ({
+                    items: [
+                        {
+                            id: 'staff-profile-1',
+                            userId: staffUserId,
+                            user: {
+                                id: staffUserId,
+                                name: 'Dr. Elizabeta',
+                                email: 'elizabeta@medsphere.local',
+                                roles: ['Doctor'],
+                            },
+                            specialization: 'Orthopedics',
+                            positionType: { defaultRoleKey: 'doctor' },
+                        },
+                    ],
+                }),
+            } as Response);
+        const client = new AuthUserDirectoryClient(
+            'http://auth.local',
+            'internal-key',
+            'http://core.local',
+        );
+
+        const profiles = await client.listByUserIds([userId, staffUserId]);
+
+        expect(global.fetch).toHaveBeenCalledTimes(2);
+        expect(profiles.get(staffUserId)).toEqual(
+            expect.objectContaining({
+                userId: staffUserId,
+                name: 'Dr. Elizabeta',
+                email: 'elizabeta@medsphere.local',
+                role: 'doctor',
+            }),
+        );
     });
 });
