@@ -24,7 +24,7 @@ export function createApp() {
         skip: (req) => req.method === 'OPTIONS' || req.path === '/health',
     }));
     app.use(morgan('dev'));
-    app.use(express.json());
+    app.use(express.json({ limit: '12mb' }));
 
     app.get('/health', (_req, res) => {
         res.json({ status: 'ok', service: 'notification-service' });
