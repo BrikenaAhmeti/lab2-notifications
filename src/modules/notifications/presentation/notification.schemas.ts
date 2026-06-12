@@ -72,3 +72,17 @@ export const listNotificationsQuerySchema = z.object({
 export const notificationIdParamsSchema = z.object({
     id: z.uuid(),
 });
+
+export const registerPushTokenSchema = z.object({
+    token: z.string().trim().regex(/^Expo(?:nent)?PushToken\[[^\]]+\]$/),
+    platform: z.enum(['android', 'ios']),
+    deviceName: z.string().trim().min(1).max(120).optional(),
+});
+
+export const unregisterPushTokenSchema = z.object({
+    token: z.string().trim().regex(/^Expo(?:nent)?PushToken\[[^\]]+\]$/),
+});
+
+export const testPushSchema = z.object({
+    delaySeconds: z.coerce.number().int().min(0).max(60).default(10),
+});

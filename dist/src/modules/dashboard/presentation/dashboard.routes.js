@@ -1,0 +1,17 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.internalDashboardRoutes = exports.dashboardRoutes = exports.activityService = void 0;
+const express_1 = require("express");
+const mongo_1 = require("../../../infrastructure/mongo/mongo");
+const authenticate_1 = require("../../../shared/middleware/authenticate");
+const internal_api_key_1 = require("../../../shared/middleware/internal-api-key");
+const activity_service_1 = require("../application/activity.service");
+const mongo_activity_repository_1 = require("../infrastructure/mongo-activity.repository");
+const dashboard_controller_1 = require("./dashboard.controller");
+const repository = new mongo_activity_repository_1.MongoActivityRepository(mongo_1.getMongoDb);
+exports.activityService = new activity_service_1.ActivityService(repository);
+const controller = new dashboard_controller_1.DashboardController(exports.activityService);
+exports.dashboardRoutes = (0, express_1.Router)();
+exports.internalDashboardRoutes = (0, express_1.Router)();
+exports.dashboardRoutes.get('/activity', authenticate_1.authenticate, controller.listActivity);
+exports.internalDashboardRoutes.post('/activity', internal_api_key_1.requireInternalApiKey, controller.recordActivityEvent);

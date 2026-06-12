@@ -1,134 +1,116 @@
-import { NextFunction, Request, Response } from 'express';
-
-import { AppError } from '../../../shared/core/errors/app-error';
-import { AuthenticatedUser } from '../../../shared/core/types/request-with-user';
-import { NotificationService } from '../application/notification.service';
-import {
-    listNotificationsQuerySchema,
-    notificationIdParamsSchema,
-    registerPushTokenSchema,
-    sendNotificationSchema,
-    testPushSchema,
-    unregisterPushTokenSchema,
-} from './notification.schemas';
-
-export class NotificationController {
-    constructor(private readonly notificationService: NotificationService) {}
-
-    send = async (req: Request, res: Response, next: NextFunction) => {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.NotificationController = void 0;
+const app_error_1 = require("../../../shared/core/errors/app-error");
+const notification_schemas_1 = require("./notification.schemas");
+class NotificationController {
+    notificationService;
+    constructor(notificationService) {
+        this.notificationService = notificationService;
+    }
+    send = async (req, res, next) => {
         try {
-            const payload = sendNotificationSchema.parse(req.body);
-
+            const payload = notification_schemas_1.sendNotificationSchema.parse(req.body);
             if ('recipients' in payload) {
                 const result = await this.notificationService.sendTyped(payload);
-
                 return res.status(201).json({ data: result });
             }
-
             const notification = await this.notificationService.create(payload);
-
             return res.status(201).json({ data: notification });
-        } catch (error) {
+        }
+        catch (error) {
             return next(error);
         }
     };
-
-    listMine = async (req: Request, res: Response, next: NextFunction) => {
+    listMine = async (req, res, next) => {
         try {
             const user = this.getUser(req);
-            const query = listNotificationsQuerySchema.parse(req.query);
+            const query = notification_schemas_1.listNotificationsQuerySchema.parse(req.query);
             const result = await this.notificationService.list({
                 userId: user.id,
                 isRead: query.isRead,
                 page: query.page,
                 limit: query.limit,
             });
-
             return res.json(result);
-        } catch (error) {
+        }
+        catch (error) {
             return next(error);
         }
     };
-
-    markRead = async (req: Request, res: Response, next: NextFunction) => {
+    markRead = async (req, res, next) => {
         try {
             const user = this.getUser(req);
-            const { id } = notificationIdParamsSchema.parse(req.params);
+            const { id } = notification_schemas_1.notificationIdParamsSchema.parse(req.params);
             const notification = await this.notificationService.markRead(id, user.id);
-
             return res.json({ data: notification });
-        } catch (error) {
+        }
+        catch (error) {
             return next(error);
         }
     };
-
-    markAllRead = async (req: Request, res: Response, next: NextFunction) => {
+    markAllRead = async (req, res, next) => {
         try {
             const user = this.getUser(req);
             const result = await this.notificationService.markAllRead(user.id);
-
             return res.json({ data: result });
-        } catch (error) {
+        }
+        catch (error) {
             return next(error);
         }
     };
-
-    delete = async (req: Request, res: Response, next: NextFunction) => {
+    delete = async (req, res, next) => {
         try {
             const user = this.getUser(req);
-            const { id } = notificationIdParamsSchema.parse(req.params);
+            const { id } = notification_schemas_1.notificationIdParamsSchema.parse(req.params);
             await this.notificationService.delete(id, user.id);
-
             return res.status(204).send();
-        } catch (error) {
+        }
+        catch (error) {
             return next(error);
         }
     };
-
-    registerPushToken = async (req: Request, res: Response, next: NextFunction) => {
+    registerPushToken = async (req, res, next) => {
         try {
             const user = this.getUser(req);
-            const payload = registerPushTokenSchema.parse(req.body);
+            const payload = notification_schemas_1.registerPushTokenSchema.parse(req.body);
             await this.notificationService.registerPushToken({
                 userId: user.id,
                 ...payload,
             });
-
             return res.status(204).send();
-        } catch (error) {
+        }
+        catch (error) {
             return next(error);
         }
     };
-
-    unregisterPushToken = async (req: Request, res: Response, next: NextFunction) => {
+    unregisterPushToken = async (req, res, next) => {
         try {
             const user = this.getUser(req);
-            const { token } = unregisterPushTokenSchema.parse(req.body);
+            const { token } = notification_schemas_1.unregisterPushTokenSchema.parse(req.body);
             await this.notificationService.unregisterPushToken(user.id, token);
-
             return res.status(204).send();
-        } catch (error) {
+        }
+        catch (error) {
             return next(error);
         }
     };
-
-    testPush = async (req: Request, res: Response, next: NextFunction) => {
+    testPush = async (req, res, next) => {
         try {
             const user = this.getUser(req);
-            const { delaySeconds } = testPushSchema.parse(req.body);
+            const { delaySeconds } = notification_schemas_1.testPushSchema.parse(req.body);
             this.notificationService.scheduleTestPush(user.id, delaySeconds);
-
             return res.status(202).json({ data: { delaySeconds } });
-        } catch (error) {
+        }
+        catch (error) {
             return next(error);
         }
     };
-
-    private getUser(req: Request): AuthenticatedUser {
+    getUser(req) {
         if (!req.user) {
-            throw new AppError('Authentication required', 401);
+            throw new app_error_1.AppError('Authentication required', 401);
         }
-
         return req.user;
     }
 }
+exports.NotificationController = NotificationController;

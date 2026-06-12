@@ -18,6 +18,11 @@ import {
 } from '../domain/notification-events';
 import { NotificationEmailService } from '../domain/notification-email.service';
 import { NotificationRepository } from '../domain/notification.repository';
+import { PushNotificationService } from '../domain/push-notification.service';
+import {
+    PushTokenRepository,
+    RegisterPushTokenInput,
+} from '../domain/push-token.repository';
 
 const publicPaths = new Set([
     '/',
@@ -166,6 +171,8 @@ export class NotificationService {
         private readonly repository: NotificationRepository,
         private readonly emailService: NotificationEmailService,
         private readonly activityService?: ActivityService,
+        private readonly pushTokenRepository?: PushTokenRepository,
+        private readonly pushNotificationService?: PushNotificationService,
     ) {}
 
     async create(input: CreateNotificationInput): Promise<Notification> {
@@ -194,6 +201,7 @@ export class NotificationService {
         });
 
         notificationGateway.emitNew(notification);
+        await this.sendPush(notification);
 
         if (channels.includes('email')) {
             await this.emailService.sendNotification(notification, input.recipientEmail);
@@ -281,6 +289,44 @@ export class NotificationService {
 
     delete(id: string, userId: string): Promise<void> {
         return this.repository.delete(id, userId);
+    }
+
+    async registerPushToken(input: RegisterPushTokenInput): Promise<void> {
+        await this.pushTokenRepository?.register(input);
+    }
+
+    async unregisterPushToken(userId: string, token: string): Promise<void> {
+        await this.pushTokenRepository?.unregister(userId, token);
+    }
+
+    scheduleTestPush(userId: string, delaySeconds: number) {
+        setTimeout(() => {
+            void this.create({
+                userId,
+                type: 'push.test',
+                title: 'MedSphere notification',
+                message: 'Push notifications are working on this device.',
+                link: '/patient',
+            }).catch((error) => {
+                console.warn('[push] unable to create test notification', {
+                    error: error instanceof Error ? error.message : String(error),
+                });
+            });
+        }, delaySeconds * 1000);
+    }
+
+    private async sendPush(notification: Notification) {
+        if (!this.pushNotificationService) return;
+
+        try {
+            await this.pushNotificationService.send(notification);
+        } catch (error) {
+            console.warn('[push] delivery failed', {
+                notificationId: notification.id,
+                userId: notification.userId,
+                error: error instanceof Error ? error.message : String(error),
+            });
+        }
     }
 
     private normalizeChannels(channels?: NotificationChannel[]): NotificationChannel[] {

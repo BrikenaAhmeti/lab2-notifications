@@ -1,0 +1,317 @@
+
+> medsphere-notification-service@1.0.0 dev
+> nodemon --watch src --exec tsx src/server.ts
+
+[33m[nodemon] 3.1.14[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] watching path(s): src\**\*[39m
+[33m[nodemon] watching extensions: ts,json[39m
+[32m[nodemon] starting `tsx src/server.ts`[39m
+◇ injected env (17) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+[31m[nodemon] app crashed - waiting for file changes before starting...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `tsx src/server.ts`[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `tsx src/server.ts`[39m
+◇ injected env (17) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+Notification service running on port 3008
+[0mGET /health [32m200[0m 2.239 ms - 48[0m
+[0mGET /health [32m200[0m 0.472 ms - 48[0m
+[0mGET /api/notifications?limit=1 [32m200[0m 68.975 ms - 460[0m
+[0mGET /api/notifications?limit=1 [32m200[0m 206.089 ms - 460[0m
+[0mGET /api/notifications?limit=1 [32m200[0m 63.930 ms - 460[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [32m200[0m 240.080 ms - 1029[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [32m200[0m 110.249 ms - 1029[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [32m200[0m 99.984 ms - 1029[0m
+[0mGET /api/notifications?limit=50 [32m200[0m 4.489 ms - 1208[0m
+[0mGET /api/notifications?limit=50 [32m200[0m 16.697 ms - 1208[0m
+[0mPUT /api/notifications/c67774a2-c042-43df-89a3-2fb5e68f9e14/read [32m200[0m 22.582 ms - 405[0m
+[0mPUT /api/notifications/b1232f82-93f3-425a-a796-1a2205d5e4ae/read [32m200[0m 10.200 ms - 410[0m
+[0mPUT /api/notifications/0eafba1e-06ba-4dad-8d66-45471d854a5f/read [32m200[0m 8.555 ms - 395[0m
+[0mGET /api/notifications?limit=1 [32m200[0m 3.391 ms - 481[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 33.386 ms - -[0m
+[0mGET /api/notifications?limit=1 [36m304[0m 6.958 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 25.530 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 18.997 ms - -[0m
+[0mGET /api/chat/rooms/841ad323-7b8b-42c9-a780-c38f667b0b4f/messages?page=1&limit=50 [32m200[0m 5.123 ms - 603[0m
+[0mPATCH /api/chat/rooms/841ad323-7b8b-42c9-a780-c38f667b0b4f/read [32m200[0m 4.063 ms - 108[0m
+[0mPOST /api/chat/rooms [32m201[0m 31.575 ms - 283[0m
+[0mGET /api/chat/rooms/5e8c7797-04bf-4054-a51a-0c91d7ebe704/messages?page=1&limit=50 [32m200[0m 3.660 ms - 70[0m
+[0mPATCH /api/chat/rooms/5e8c7797-04bf-4054-a51a-0c91d7ebe704/read [32m200[0m 3.541 ms - 108[0m
+[0mPOST /api/chat/rooms/5e8c7797-04bf-4054-a51a-0c91d7ebe704/messages [32m201[0m 16.885 ms - 306[0m
+[0mGET /api/notifications?limit=1 [36m304[0m 19.603 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [32m200[0m 28.963 ms - 1998[0m
+[0mGET /api/notifications?limit=1 [36m304[0m 4.287 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 33.752 ms - -[0m
+[0mGET /api/notifications?limit=1 [36m304[0m 3.299 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 17.570 ms - -[0m
+[0mPOST /internal/notifications/send [32m201[0m 22.848 ms - 382[0m
+[0mPOST /internal/notifications/send [32m201[0m 56.170 ms - 423[0m
+[0mGET /api/notifications?limit=1 [32m200[0m 32.380 ms - 458[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 50.710 ms - -[0m
+[0mGET /api/notifications?limit=1 [32m200[0m 50.608 ms - 458[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 76.201 ms - -[0m
+[0mGET /api/notifications?limit=1 [36m304[0m 5.465 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 27.221 ms - -[0m
+[0mGET /api/notifications?limit=50 [32m200[0m 4.694 ms - 1645[0m
+[0mGET /api/notifications?limit=50 [32m200[0m 6.275 ms - 1645[0m
+[0mPUT /api/notifications/5c00289a-022f-475c-a015-07f8b7bde3d2/read [32m200[0m 11.082 ms - 403[0m
+[0mGET /api/notifications?limit=1 [32m200[0m 7.090 ms - 479[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 35.322 ms - -[0m
+[0mGET /api/notifications?limit=1 [36m304[0m 4.329 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 26.291 ms - -[0m
+[0mGET /api/notifications?limit=1 [32m200[0m 30.796 ms - 499[0m
+[0mGET /api/notifications?limit=1 [32m200[0m 33.904 ms - 499[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [32m200[0m 54.052 ms - 1038[0m
+[0mGET /api/notifications?limit=1 [36m304[0m 5.654 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [32m200[0m 73.404 ms - 1038[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [32m200[0m 21.232 ms - 1038[0m
+[0mGET /api/notifications?limit=50 [32m200[0m 2.983 ms - 500[0m
+[0mGET /api/notifications?limit=50 [32m200[0m 2.702 ms - 500[0m
+[0mPUT /api/notifications/8b41aa0b-61d3-4d43-bd76-df54cbc70ef1/read [32m200[0m 9.283 ms - 444[0m
+[0mGET /api/notifications?limit=1 [32m200[0m 6.093 ms - 520[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 26.316 ms - -[0m
+[0mGET /api/notifications?limit=1 [36m304[0m 3.736 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 16.541 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 18.180 ms - -[0m
+[0mGET /api/chat/rooms/5e8c7797-04bf-4054-a51a-0c91d7ebe704/messages?page=1&limit=50 [32m200[0m 3.385 ms - 334[0m
+[0mPATCH /api/chat/rooms/5e8c7797-04bf-4054-a51a-0c91d7ebe704/read [32m200[0m 10.456 ms - 108[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [32m200[0m 14.098 ms - 1038[0m
+[0mPOST /api/chat/rooms/5e8c7797-04bf-4054-a51a-0c91d7ebe704/messages [32m201[0m 14.341 ms - 303[0m
+[0mPOST /api/chat/rooms [32m201[0m 12.478 ms - 283[0m
+[0mGET /api/chat/rooms/51259ec5-b6e9-406c-816f-a6dfd55bdb9f/messages?page=1&limit=50 [32m200[0m 3.960 ms - 70[0m
+[0mPATCH /api/chat/rooms/51259ec5-b6e9-406c-816f-a6dfd55bdb9f/read [32m200[0m 4.304 ms - 108[0m
+[0mPOST /api/chat/rooms/51259ec5-b6e9-406c-816f-a6dfd55bdb9f/messages [32m201[0m 20.462 ms - 322[0m
+[0mGET /api/notifications?limit=1 [36m304[0m 19.721 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [32m200[0m 23.971 ms - 2027[0m
+[0mGET /api/notifications?limit=50 [32m200[0m 4.106 ms - 521[0m
+[0mGET /api/notifications?limit=50 [32m200[0m 15.123 ms - 521[0m
+[0mGET /api/notifications?limit=1 [36m304[0m 4.591 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 25.655 ms - -[0m
+[0mGET /api/chat/rooms/5e8c7797-04bf-4054-a51a-0c91d7ebe704/messages?page=1&limit=50 [32m200[0m 3.942 ms - 617[0m
+[0mPATCH /api/chat/rooms/5e8c7797-04bf-4054-a51a-0c91d7ebe704/read [32m200[0m 3.164 ms - 108[0m
+[0mGET /api/notifications?limit=1 [36m304[0m 23.429 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 30.842 ms - -[0m
+[0mGET /api/notifications?limit=1 [36m304[0m 16.707 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 28.499 ms - -[0m
+[0mGET /api/notifications?limit=50 [36m304[0m 4.048 ms - -[0m
+[0mGET /api/notifications?limit=50 [36m304[0m 21.604 ms - -[0m
+[0mGET /api/notifications?limit=1 [36m304[0m 5.194 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 25.812 ms - -[0m
+[0mGET /api/notifications?limit=1 [36m304[0m 3.232 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 16.717 ms - -[0m
+[0mGET /api/notifications?limit=1 [36m304[0m 3.962 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 20.562 ms - -[0m
+[0mGET /api/notifications?limit=1 [36m304[0m 3.138 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 17.516 ms - -[0m
+[0mGET /api/notifications?limit=1 [36m304[0m 3.307 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 22.428 ms - -[0m
+[0mGET /api/notifications?limit=1 [32m200[0m 32.580 ms - 479[0m
+[0mGET /api/notifications?limit=1 [32m200[0m 35.709 ms - 479[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [32m200[0m 46.846 ms - 1995[0m
+[0mGET /api/notifications?limit=1 [32m200[0m 7.538 ms - 479[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [32m200[0m 62.955 ms - 1995[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [32m200[0m 30.389 ms - 1995[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 19.896 ms - -[0m
+[0mGET /api/chat/rooms/5e8c7797-04bf-4054-a51a-0c91d7ebe704/messages?page=1&limit=50 [36m304[0m 5.294 ms - -[0m
+[0mPATCH /api/chat/rooms/5e8c7797-04bf-4054-a51a-0c91d7ebe704/read [32m200[0m 10.102 ms - 108[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [32m200[0m 19.359 ms - 1995[0m
+[0mPOST /api/chat/rooms/5e8c7797-04bf-4054-a51a-0c91d7ebe704/upload [32m201[0m 758.227 ms - 151[0m
+[0mPOST /api/chat/rooms/5e8c7797-04bf-4054-a51a-0c91d7ebe704/messages [32m201[0m 11.801 ms - 369[0m
+[0mGET /uploads/chat/1068c4a3-7389-4243-acb8-5896b5639c4d-IMG_2355.jpg [32m200[0m 2.629 ms - 1648548[0m
+[0mGET /api/notifications?limit=1 [36m304[0m 24.468 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [32m200[0m 33.484 ms - 2061[0m
+[0mGET /api/notifications?limit=1 [32m200[0m 51.656 ms - 85[0m
+[0mGET /api/notifications?limit=1 [32m200[0m 56.062 ms - 85[0m
+[0mGET /api/notifications?limit=1 [36m304[0m 8.200 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [32m200[0m 103.102 ms - 1061[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [32m200[0m 106.175 ms - 1061[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [32m200[0m 71.319 ms - 1061[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 44.782 ms - -[0m
+[0mGET /api/chat/rooms/51259ec5-b6e9-406c-816f-a6dfd55bdb9f/messages?page=1&limit=50 [32m200[0m 5.066 ms - 350[0m
+[0mPATCH /api/chat/rooms/51259ec5-b6e9-406c-816f-a6dfd55bdb9f/read [32m200[0m 17.722 ms - 108[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [32m200[0m 26.581 ms - 1061[0m
+[0mGET /api/notifications?limit=1 [36m304[0m 36.612 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 53.540 ms - -[0m
+[0mGET /api/notifications?limit=1 [36m304[0m 4.021 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 39.691 ms - -[0m
+[0mGET /api/notifications?limit=1 [36m304[0m 6.418 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 30.875 ms - -[0m
+[0mPOST /internal/notifications/send [32m201[0m 30.642 ms - 423[0m
+[0mPOST /internal/notifications/send [32m201[0m 28.098 ms - 382[0m
+[0mGET /api/notifications?limit=1 [32m200[0m 38.280 ms - 458[0m
+[0mGET /api/notifications?limit=1 [32m200[0m 34.689 ms - 458[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 60.249 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 93.023 ms - -[0m
+[0mGET /api/notifications?limit=50 [32m200[0m 5.449 ms - 459[0m
+[0mGET /api/notifications?limit=50 [32m200[0m 14.993 ms - 459[0m
+[0mPUT /api/notifications/48faaba4-7c4f-4ae9-b519-592e3bca8abb/read [32m200[0m 13.935 ms - 403[0m
+[0mGET /api/notifications?limit=1 [32m200[0m 5.478 ms - 479[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 41.256 ms - -[0m
+[0mGET /api/notifications?limit=1 [36m304[0m 5.225 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 21.698 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 21.725 ms - -[0m
+[0mGET /api/chat/rooms/51259ec5-b6e9-406c-816f-a6dfd55bdb9f/messages?page=1&limit=50 [32m200[0m 5.186 ms - 371[0m
+[0mPATCH /api/chat/rooms/51259ec5-b6e9-406c-816f-a6dfd55bdb9f/read [32m200[0m 4.391 ms - 108[0m
+[0mGET /api/notifications?limit=1 [36m304[0m 5.871 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 34.653 ms - -[0m
+[0mPOST /api/chat/rooms/51259ec5-b6e9-406c-816f-a6dfd55bdb9f/upload [32m201[0m 1876.825 ms - 150[0m
+[0mPOST /api/chat/rooms/51259ec5-b6e9-406c-816f-a6dfd55bdb9f/messages [32m201[0m 18.443 ms - 369[0m
+[0mGET /uploads/chat/f2fd8199-fb1e-4c55-90f4-552aeeb2cca4-IMG_8510.png [32m200[0m 1.385 ms - 4178633[0m
+[0mGET /uploads/chat/f2fd8199-fb1e-4c55-90f4-552aeeb2cca4-IMG_8510.png [32m200[0m 0.934 ms - 4178633[0m
+[0mGET /uploads/chat/f2fd8199-fb1e-4c55-90f4-552aeeb2cca4-IMG_8510.png [32m200[0m 9.446 ms - 4178633[0m
+[0mGET /api/notifications?limit=1 [36m304[0m 25.942 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [32m200[0m 39.872 ms - 1108[0m
+[0mGET /health [32m200[0m 1.078 ms - 48[0m
+[0mGET /api/notifications?limit=1 [32m200[0m 53.469 ms - 479[0m
+[0mGET /api/notifications?limit=1 [32m200[0m 58.449 ms - 479[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [32m200[0m 83.257 ms - 1108[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [32m200[0m 37.355 ms - 1108[0m
+[0mGET /api/notifications?limit=1 [36m304[0m 5.448 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 44.828 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 22.987 ms - -[0m
+[0mGET /api/chat/rooms/51259ec5-b6e9-406c-816f-a6dfd55bdb9f/messages?page=1&limit=50 [32m200[0m 4.627 ms - 699[0m
+[0mPATCH /api/chat/rooms/51259ec5-b6e9-406c-816f-a6dfd55bdb9f/read [32m200[0m 5.113 ms - 108[0m
+[0mGET /uploads/chat/f2fd8199-fb1e-4c55-90f4-552aeeb2cca4-IMG_8510.png [32m200[0m 1.160 ms - 4178633[0m
+[0mGET /api/notifications?limit=1 [36m304[0m 25.722 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 56.617 ms - -[0m
+[0mPOST /api/chat/rooms/51259ec5-b6e9-406c-816f-a6dfd55bdb9f/messages [32m201[0m 47.248 ms - 299[0m
+[0mGET /api/notifications?limit=1 [36m304[0m 20.688 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [32m200[0m 29.254 ms - 1038[0m
+[0mGET /api/notifications?limit=1 [36m304[0m 4.531 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 21.559 ms - -[0m
+[0mPOST /internal/notifications/send [32m201[0m 38.270 ms - 382[0m
+[0mPOST /internal/notifications/send [32m201[0m 41.801 ms - 423[0m
+[0mGET /api/notifications?limit=1 [32m200[0m 32.264 ms - 458[0m
+[0mGET /api/notifications?limit=1 [32m200[0m 38.442 ms - 458[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 77.364 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 79.605 ms - -[0m
+[0mGET /api/notifications?limit=1 [36m304[0m 7.548 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 35.793 ms - -[0m
+[0mGET /api/notifications?limit=50 [32m200[0m 37.032 ms - 854[0m
+[0mGET /api/notifications?limit=50 [32m200[0m 36.660 ms - 854[0m
+[0mPUT /api/notifications/754fb70d-35d0-4f0a-b829-36d5ea0758d3/read [32m200[0m 13.134 ms - 403[0m
+[0mGET /api/notifications?limit=1 [32m200[0m 19.114 ms - 479[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 97.102 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 17.003 ms - -[0m
+[0mGET /api/notifications?limit=1 [36m304[0m 3.331 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [33m401[0m 1.068 ms - 38[0m
+[0mPOST /api/chat/rooms [33m401[0m 0.654 ms - 38[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [33m401[0m 0.480 ms - 38[0m
+[0mGET /api/notifications?limit=1 [33m401[0m 0.562 ms - 38[0m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `tsx src/server.ts`[39m
+◇ injected env (17) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+Notification service running on port 3008
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `tsx src/server.ts`[39m
+◇ injected env (17) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+Notification service running on port 3008
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `tsx src/server.ts`[39m
+◇ injected env (17) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+Notification service running on port 3008
+[0mPOST /api/notifications/push-test [33m401[0m 20.505 ms - 34[0m
+[0mGET /health [32m200[0m 0.626 ms - 48[0m
+[0mGET /health [32m200[0m 0.224 ms - 48[0m
+[0mPOST /api/notifications/push-tokens [32m204[0m 182.474 ms - -[0m
+[0mPOST /api/notifications/push-test [32m202[0m 1.373 ms - 27[0m
+[0mDELETE /api/notifications/push-tokens [32m204[0m 4.207 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 41.380 ms - -[0m
+[0mGET /api/notifications?limit=1 [36m304[0m 75.418 ms - -[0m
+[0mGET /api/notifications?limit=1 [36m304[0m 53.914 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 47.151 ms - -[0m
+[0mGET /api/notifications?limit=1 [36m304[0m 3.674 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 20.184 ms - -[0m
+[0mPOST /api/notifications/push-tokens [32m204[0m 13.370 ms - -[0m
+[0mGET /api/notifications?limit=50 [32m200[0m 5.467 ms - 875[0m
+[0mGET /api/notifications?limit=50 [32m200[0m 2.817 ms - 875[0m
+[0mPOST /api/notifications/push-test [32m202[0m 0.689 ms - 28[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 26.489 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 17.807 ms - -[0m
+[0mGET /api/notifications?limit=1 [32m200[0m 34.503 ms - 397[0m
+[0mGET /api/notifications?limit=1 [32m200[0m 27.995 ms - 397[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 14.516 ms - -[0m
+[0mGET /api/notifications?limit=1 [36m304[0m 4.319 ms - -[0m
+[0mPOST /api/notifications/push-tokens [32m204[0m 6.255 ms - -[0m
+[0mGET /api/notifications?limit=50 [32m200[0m 4.815 ms - 1188[0m
+[0mGET /api/notifications?limit=50 [32m200[0m 4.054 ms - 1188[0m
+[0mPUT /api/notifications/84bf278a-d2e4-426c-b28d-d8c29c70c47a/read [32m200[0m 23.674 ms - 342[0m
+[0mGET /api/notifications?limit=1 [32m200[0m 4.525 ms - 418[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 23.520 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 12.922 ms - -[0m
+[0mGET /api/notifications?limit=1 [36m304[0m 2.674 ms - -[0m
+[0mGET /api/notifications?limit=50 [32m200[0m 3.037 ms - 1209[0m
+[0mGET /api/notifications?limit=50 [32m200[0m 3.007 ms - 1209[0m
+[0mPOST /api/notifications/push-test [32m202[0m 0.730 ms - 28[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 27.078 ms - -[0m
+[0mGET /api/notifications?limit=1 [32m200[0m 16.938 ms - 397[0m
+[0mGET /api/notifications?limit=1 [32m200[0m 17.673 ms - 397[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 15.740 ms - -[0m
+[0mGET /api/notifications?limit=1 [36m304[0m 7.721 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 39.923 ms - -[0m
+[0mPOST /api/notifications/push-tokens [32m204[0m 13.635 ms - -[0m
+[0mGET /api/notifications?limit=50 [32m200[0m 4.589 ms - 1522[0m
+[0mGET /api/notifications?limit=50 [32m200[0m 12.572 ms - 1522[0m
+[0mPUT /api/notifications/9bf76f4d-dc35-4c83-b47f-3400b2940557/read [32m200[0m 15.548 ms - 342[0m
+[0mPOST /api/notifications/push-test [32m202[0m 0.627 ms - 28[0m
+[0mGET /api/notifications?limit=1 [32m200[0m 22.571 ms - 397[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 45.794 ms - -[0m
+[0mGET /api/notifications?limit=1 [36m304[0m 2.810 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 22.031 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 20.791 ms - -[0m
+[0mGET /api/chat/rooms/51259ec5-b6e9-406c-816f-a6dfd55bdb9f/messages?page=1&limit=50 [32m200[0m 8.494 ms - 957[0m
+[0mPATCH /api/chat/rooms/51259ec5-b6e9-406c-816f-a6dfd55bdb9f/read [32m200[0m 6.119 ms - 108[0m
+[0mGET /api/notifications?limit=1 [32m200[0m 33.818 ms - 479[0m
+[0mGET /api/notifications?limit=1 [32m200[0m 44.429 ms - 479[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [32m200[0m 50.656 ms - 2061[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [32m200[0m 52.838 ms - 2061[0m
+[0mGET /api/notifications?limit=1 [36m304[0m 4.979 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 16.768 ms - -[0m
+[0mPOST /api/notifications/push-tokens [32m204[0m 14.735 ms - -[0m
+[0mGET /api/notifications?limit=50 [32m200[0m 4.335 ms - 1666[0m
+[0mGET /api/notifications?limit=50 [32m200[0m 5.729 ms - 1666[0m
+[0mPOST /api/notifications/push-test [32m202[0m 1.149 ms - 28[0m
+[0mGET /api/notifications?limit=1 [32m200[0m 32.585 ms - 397[0m
+[0mGET /api/notifications?limit=1 [32m200[0m 37.921 ms - 397[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 60.862 ms - -[0m
+[0mGET /api/notifications?limit=1 [36m304[0m 7.059 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 62.499 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 29.074 ms - -[0m
+[0mPOST /api/notifications/push-tokens [32m204[0m 5.653 ms - -[0m
+[0mGET /api/notifications?limit=50 [32m200[0m 4.402 ms - 1979[0m
+[0mGET /api/notifications?limit=50 [32m200[0m 12.433 ms - 1979[0m
+[0mPUT /api/notifications/1c855af0-b335-423c-8ff6-d0898f25e9f5/read [32m200[0m 15.928 ms - 342[0m
+[0mPOST /api/notifications/push-test [32m202[0m 0.545 ms - 28[0m
+[0mGET /api/notifications?limit=1 [36m304[0m 20.884 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 26.360 ms - -[0m
+[0mPOST /internal/notifications/send [32m201[0m 25.169 ms - 423[0m
+[0mPOST /internal/notifications/send [32m201[0m 317.363 ms - 382[0m
+[0mGET /api/notifications?limit=1 [32m200[0m 18.410 ms - 458[0m
+[0mGET /api/notifications?limit=1 [32m200[0m 19.568 ms - 458[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 27.462 ms - -[0m
+[0mGET /api/chat/rooms?page=1&limit=50 [36m304[0m 28.963 ms - -[0m
+[0mGET /api/notifications?limit=50 [32m200[0m 19.604 ms - 2230[0m
+[0mGET /api/notifications?limit=50 [32m200[0m 27.706 ms - 2230[0m
+[0mPOST /api/notifications/push-test [32m202[0m 0.851 ms - 28[0m
