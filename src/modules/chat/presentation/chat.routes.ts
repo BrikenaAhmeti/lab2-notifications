@@ -19,11 +19,14 @@ import { LocalChatAttachmentStorage } from '../infrastructure/local-chat-attachm
 import { AuthAuditLogClient } from '../infrastructure/auth-audit-log.client';
 import { AuthUserDirectoryClient } from '../infrastructure/auth-user-directory.client';
 import { MongoChatRepository } from '../infrastructure/mongo-chat.repository';
+import { NotificationChatMessageNotifier } from '../infrastructure/notification-chat-message-notifier';
+import { pushNotificationService } from '../../notifications/presentation/notification.routes';
 import { ChatController } from './chat.controller';
 
 const repository = new MongoChatRepository(getMongoDb);
 const participantDirectory = new AuthUserDirectoryClient();
 const auditLogger = new AuthAuditLogClient();
+const messageNotifier = new NotificationChatMessageNotifier(pushNotificationService);
 const attachmentStorage = new LocalChatAttachmentStorage(
     env.chat.uploadDir,
     env.chat.publicBaseUrl,
@@ -32,7 +35,7 @@ const handlers = {
     createDirectRoom: new CreateDirectChatRoomHandler(repository, auditLogger),
     listRooms: new ListChatRoomsHandler(repository, participantDirectory),
     listMessages: new ListChatMessagesHandler(repository),
-    sendMessage: new SendChatMessageHandler(repository, auditLogger),
+    sendMessage: new SendChatMessageHandler(repository, auditLogger, messageNotifier),
     markRead: new MarkChatRoomReadHandler(repository, auditLogger),
     storeAttachment: new StoreChatAttachmentHandler(repository, attachmentStorage, auditLogger),
 };

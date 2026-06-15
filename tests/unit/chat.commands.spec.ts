@@ -10,6 +10,7 @@ import {
 } from '../../src/modules/chat/application/chat.commands';
 import { ChatAuditLogger } from '../../src/modules/chat/domain/chat-audit.logger';
 import { ChatAttachmentStorage } from '../../src/modules/chat/domain/chat-attachment.storage';
+import { ChatMessageNotifier } from '../../src/modules/chat/domain/chat-message-notifier';
 import { ChatMessage, ChatRoom } from '../../src/modules/chat/domain/chat.entity';
 import { ChatRepository } from '../../src/modules/chat/domain/chat.repository';
 import { chatGateway } from '../../src/socket/chat.gateway';
@@ -58,6 +59,12 @@ function createRepository(): jest.Mocked<ChatRepository> {
 function createAuditLogger(): jest.Mocked<ChatAuditLogger> {
     return {
         record: jest.fn().mockResolvedValue(undefined),
+    };
+}
+
+function createMessageNotifier(): jest.Mocked<ChatMessageNotifier> {
+    return {
+        notifyIncomingMessage: jest.fn().mockResolvedValue(undefined),
     };
 }
 
@@ -180,7 +187,8 @@ describe('chat command handlers', () => {
         const repository = createRepository();
         const emitMessage = jest.spyOn(chatGateway, 'emitMessage').mockImplementation();
         const auditLogger = createAuditLogger();
-        const handler = new SendChatMessageHandler(repository, auditLogger);
+        const messageNotifier = createMessageNotifier();
+        const handler = new SendChatMessageHandler(repository, auditLogger, messageNotifier);
 
         await expect(
             handler.execute(
@@ -223,6 +231,10 @@ describe('chat command handlers', () => {
         );
         expect(JSON.stringify(auditLogger.record.mock.calls[0][0].newValue)).not.toContain('Hello doctor');
         expect(emitMessage).toHaveBeenCalledWith(room.participants, message);
+        expect(messageNotifier.notifyIncomingMessage).toHaveBeenCalledWith({
+            message,
+            recipientIds: [staffId],
+        });
     });
 
     it('rejects file messages without a file URL', async () => {

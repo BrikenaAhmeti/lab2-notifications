@@ -5,6 +5,7 @@ import { AuthenticatedUser } from '../../../shared/core/types/request-with-user'
 import { assertCanCreateDirectRoom } from '../domain/chat-access-policy';
 import { ChatAuditLogger, ChatAuditLogInput } from '../domain/chat-audit.logger';
 import { ChatAttachmentStorage } from '../domain/chat-attachment.storage';
+import { ChatMessageNotifier } from '../domain/chat-message-notifier';
 import {
     ChatAttachment,
     ChatMessage,
@@ -102,6 +103,7 @@ export class SendChatMessageHandler
     constructor(
         private readonly repository: ChatRepository,
         private readonly auditLogger?: ChatAuditLogger,
+        private readonly messageNotifier?: ChatMessageNotifier,
     ) {}
 
     async execute(command: SendChatMessageCommand): Promise<ChatMessage> {
@@ -127,6 +129,10 @@ export class SendChatMessageHandler
             fileUrl: command.fileUrl,
         });
 
+        const recipientIds = room.participants.filter(
+            (participantId) => participantId !== command.senderId,
+        );
+
         await recordChatAudit(this.auditLogger, {
             userId: command.senderId,
             action: 'chat.message.sent',
@@ -136,7 +142,7 @@ export class SendChatMessageHandler
                 roomId: command.roomId,
                 messageId: message.id,
                 senderId: command.senderId,
-                recipientIds: room.participants.filter((participantId) => participantId !== command.senderId),
+                recipientIds,
                 type: message.type,
                 hasAttachment: Boolean(message.fileUrl),
                 contentLength: message.content.length,
@@ -146,6 +152,7 @@ export class SendChatMessageHandler
         });
 
         chatGateway.emitMessage(room.participants, message);
+        await notifyChatRecipients(this.messageNotifier, message, recipientIds);
 
         return message;
     }
@@ -259,6 +266,27 @@ async function recordChatAudit(
     } catch (error) {
         console.warn('[chat-audit] audit logger failed', {
             action: input.action,
+            error: error instanceof Error ? error.message : String(error),
+        });
+    }
+}
+
+async function notifyChatRecipients(
+    messageNotifier: ChatMessageNotifier | undefined,
+    message: ChatMessage,
+    recipientIds: string[],
+) {
+    if (!messageNotifier || recipientIds.length === 0) {
+        return;
+    }
+
+    try {
+        await messageNotifier.notifyIncomingMessage({ message, recipientIds });
+    } catch (error) {
+        console.warn('[chat-notification] unable to notify recipients', {
+            roomId: message.roomId,
+            messageId: message.id,
+            recipientIds,
             error: error instanceof Error ? error.message : String(error),
         });
     }

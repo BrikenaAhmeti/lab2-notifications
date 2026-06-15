@@ -14,7 +14,7 @@ import { PrismaPushTokenRepository } from '../infrastructure/push-token.prisma.r
 
 const repository = new PrismaNotificationRepository(prisma);
 const pushTokenRepository = new PrismaPushTokenRepository(prisma);
-const pushNotificationService = new ExpoPushNotificationService(pushTokenRepository);
+export const pushNotificationService = new ExpoPushNotificationService(pushTokenRepository);
 const emailService = new NodemailerEmailService();
 export const notificationService = new NotificationService(
     repository,
